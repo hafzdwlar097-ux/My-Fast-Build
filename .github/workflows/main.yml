@@ -1,5 +1,5 @@
 
-name: Flutter Auto Build
+name: Flutter Build
 on: [push]
 jobs:
   build:
@@ -9,26 +9,10 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-          
-      - name: Reconstruct Project
+      - name: Build
         run: |
-          mkdir -p temp_lib
-          [ -f lib/main.dart ] && cp lib/main.dart temp_lib/main.dart || echo ""
-          rm -rf *
-          flutter create --org com.ibrahim --project-name fast_build_app .
-          [ -f temp_lib/main.dart ] && cp temp_lib/main.dart lib/main.dart || echo "void main(){}" > lib/main.dart
-          # تنظيف الكود من أي وسم ماركداون قد يتسرب
-          sed -i '/```/d' lib/main.dart
-          sed -i '/^dart/d' lib/main.dart
-          sed -i -n '/import/,$p' lib/main.dart
-          
-      - name: Build APK
-        run: flutter build apk --debug
-        
-      - name: Send APK to Telegram
+          flutter create --org com.app --project-name fast_build_app .
+          flutter build apk --debug
+      - name: Send
         run: |
-          URL="[https://api.telegram.org/bot](https://api.telegram.org/bot)8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument"
-          curl -F "chat_id=1857967143" \
-               -F "document=@build/app/outputs/flutter-apk/app-debug.apk" \
-               -F "caption=✅ تم بناء تطبيقك بنجاح!" \
-               "$URL"
+          curl -F chat_id=1857967143 -F document=@build/app/outputs/flutter-apk/app-debug.apk https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument
