@@ -1,5 +1,5 @@
 
-name: Flutter Build and Send
+name: Flutter Super Builder
 on: [push]
 jobs:
   build:
@@ -9,13 +9,13 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-      - name: Clean AI Code
-        run: |
-          sed -i '/```/d' lib/main.dart
-          sed -i '/^dart$/d' lib/main.dart
-          sed -i '1{/^$/d}' lib/main.dart
+          channel: 'stable'
+      - name: Install dependencies
+        run: flutter pub get
       - name: Build APK
         run: flutter build apk --debug
-      - name: Send APK to Telegram
-        run: |
-          curl -v -F "chat_id=1857967143" -F "document=@build/app/outputs/flutter-apk/app-debug.apk" -F "caption=🚀 تم بناء تطبيقك بنجاح!" [https://api.telegram.org/bot](https://api.telegram.org/bot)8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Flutter-App
+          path: build/app/outputs/flutter-apk/app-debug.apk
