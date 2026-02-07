@@ -1,139 +1,247 @@
-// New Build ID: 2179
-To set up a Flutter app for offline file transfer using an HTTP server, first create a new Flutter project. 
-
-Name the project com.example.offline_file_transfer. 
-
-Then add the http_server and path_provider packages to the pubspec.yaml file. 
-
-The pubspec.yaml file should look like this:
-
-name: offline_file_transfer
-description: A new Flutter project.
-version: 1.0.0+1
-
-environment:
-  sdk: ">=2.12.0 <3.0.0"
-
-dependencies:
-  flutter:
-    sdk: flutter
-
-  http_server: ^0.5.0
-  path_provider: ^2.0.2
-  path: ^1.8.0
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-
-Next, import the necessary packages in the main dart file.
-
-Then create an HTTP server in the main dart file to handle file requests.
-
-Use the path_provider package to get the directory where files are stored.
-
-Use the http_server package to create an HTTP server and handle GET requests to download files.
-
-Create a method to send files between devices using the HTTP server.
-
-Finally, create a simple UI to select files and send them to other devices.
-
-Here is the code to get you started:
-
-```dart
-import 'dart:io';
+// Build_ID_vsw0_1770480644
 import 'package:flutter/material.dart';
-import 'package:http_server/http_server.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart';
-import 'dart:async';
 
 void main() {
-  runApp(MyApp());
+  runApp(const ScienceScannerApp());
 }
 
-class MyApp extends StatelessWidget {
+class ScienceScannerApp extends StatelessWidget {
+  const ScienceScannerApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MyHomePage(),
+      title: 'Science Scanner',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue[900]!,
+          brightness: Brightness.light,
+        ),
+      ),
+      home: const ScienceScannerHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class ScienceScannerHomePage extends StatefulWidget {
+  const ScienceScannerHomePage({Key? key}) : super(key: key);
+
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<ScienceScannerHomePage> createState() => _ScienceScannerHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  HttpServer _server;
-  final _serverPort = 8080;
+class _ScienceScannerHomePageState extends State<ScienceScannerHomePage> {
+  int _currentIndex = 0;
 
-  Future<void> _startServer() async {
-    final server = await HttpServer.bind(InternetAddress.anyIPv4, _serverPort);
-    _server = server;
-
-    await for (var req in server) {
-      final method = req.method;
-      final uri = req.uri;
-      final headers = req.headers;
-
-      if (method == 'GET' && uri.pathSegments.first == 'download') {
-        final filename = uri.pathSegments.last;
-        final directory = await getApplicationDocumentsDirectory();
-        final file = File(join(directory.path, filename));
-
-        if (await file.exists()) {
-          await req.response.headers.set('Content-Type', 'application/octet-stream');
-          await req.response.headers.set('Content-Disposition', 'attachment; filename="$filename"');
-          await req.response.headers.set('Content-Length', file.lengthSync().toString());
-
-          await file.openRead().pipe(req.response);
-        } else {
-          req.response.statusCode = 404;
-          req.response.write('File not found');
-        }
-      } else {
-        req.response.statusCode = 404;
-        req.response.write('Not found');
-      }
-
-      await req.response.close();
-    }
-  }
-
-  Future<void> _stopServer() async {
-    if (_server != null) {
-      await _server.close();
-      _server = null;
-    }
-  }
+  final _pages = [
+    const PhysicsCalculatorPage(),
+    const ChemicalElementsDatabasePage(),
+    const GeometryUnitsConverterPage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Offline File Transfer'),
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calculate),
+            label: 'حاسبة قوانين الفيزياء',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book),
+            label: 'قاعدة بيانات العناصر الكيميائية',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.compare),
+            label: 'محول وحدات هندسية',
+          ),
+        ],
       ),
-      body: Center(
+    );
+  }
+}
+
+class PhysicsCalculatorPage extends StatefulWidget {
+  const PhysicsCalculatorPage({Key? key}) : super(key: key);
+
+  @override
+  State<PhysicsCalculatorPage> createState() => _PhysicsCalculatorPageState();
+}
+
+class _PhysicsCalculatorPageState extends State<PhysicsCalculatorPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _velocityController = TextEditingController();
+  final _timeController = TextEditingController();
+  final _accelerationController = TextEditingController();
+
+  String _result = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Form(
+        key: _formKey,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ElevatedButton(
-              onPressed: _startServer,
-              child: Text('Start Server'),
+          children: [
+            TextFormField(
+              controller: _velocityController,
+              decoration: const InputDecoration(
+                labelText: 'السرعة',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'الرجاء إدخال قيمة';
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              controller: _timeController,
+              decoration: const InputDecoration(
+                labelText: 'الوقت',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'الرجاء إدخال قيمة';
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              controller: _accelerationController,
+              decoration: const InputDecoration(
+                labelText: 'التسارع',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'الرجاء إدخال قيمة';
+                }
+                return null;
+              },
             ),
             ElevatedButton(
-              onPressed: _stopServer,
-              child: Text('Stop Server'),
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  final velocity = double.parse(_velocityController.text);
+                  final time = double.parse(_timeController.text);
+                  final acceleration = double.parse(_accelerationController.text);
+
+                  final result = velocity * time + 0.5 * acceleration * time * time;
+
+                  setState(() {
+                    _result = result.toString();
+                  });
+                }
+              },
+              child: const Text('حس_ab'),
             ),
+            Text(_result),
           ],
         ),
       ),
     );
   }
 }
-```
 
-This code creates a basic HTTP server that listens for GET requests to download files. The server is started and stopped using the buttons on the screen. You can add more functionality to this code, such as a file selector and a way to send files to other devices.
+class ChemicalElementsDatabasePage extends StatefulWidget {
+  const ChemicalElementsDatabasePage({Key? key}) : super(key: key);
+
+  @override
+  State<ChemicalElementsDatabasePage> createState() => _ChemicalElementsDatabasePageState();
+}
+
+class _ChemicalElementsDatabasePageState extends State<ChemicalElementsDatabasePage> {
+  final _elements = [
+    {'name': 'الهيدروجين', 'symbol': 'H', 'atomicNumber': 1},
+    {'name': 'الهليوم', 'symbol': 'He', 'atomicNumber': 2},
+    // أضف عناصر كيميائية هنا
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: _elements.length,
+      itemBuilder: (context, index) {
+        final element = _elements[index];
+
+        return ListTile(
+          title: Text(element['name']!),
+          subtitle: Text('${element['symbol']} - ${element['atomicNumber']}'),
+        );
+      },
+    );
+  }
+}
+
+class GeometryUnitsConverterPage extends StatefulWidget {
+  const GeometryUnitsConverterPage({Key? key}) : super(key: key);
+
+  @override
+  State<GeometryUnitsConverterPage> createState() => _GeometryUnitsConverterPageState();
+}
+
+class _GeometryUnitsConverterPageState extends State<GeometryUnitsConverterPage> {
+  final _fromController = TextEditingController();
+  final _toController = TextEditingController();
+
+  String _result = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        children: [
+          TextField(
+            controller: _fromController,
+            decoration: const InputDecoration(
+              labelText: 'من',
+            ),
+          ),
+          TextField(
+            controller: _toController,
+            decoration: const InputDecoration(
+              labelText: 'إلى',
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_fromController.text.isNotEmpty && _toController.text.isNotEmpty) {
+                final from = double.parse(_fromController.text);
+                final to = _toController.text;
+
+                double result;
+
+                if (to == 'مليمتر') {
+                  result = from * 1000;
+                } else if (to == 'سنتيمتر') {
+                  result = from * 100;
+                } else if (to == 'متر') {
+                  result = from;
+                } else {
+                  result = 0;
+                }
+
+                setState(() {
+                  _result = result.toString();
+                });
+              }
+            },
+            child: const Text('转换'),
+          ),
+          Text(_result),
+        ],
+      ),
+    );
+  }
+}
