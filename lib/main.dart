@@ -1,41 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:vibration/vibration.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: TasbeehScreen(),
+      title: 'سبحة إلكترونية',
+      home: MyHomePage(),
     );
   }
 }
 
-class TasbeehScreen extends StatefulWidget {
-  const TasbeehScreen({super.key});
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
-  State<TasbeehScreen> createState() => _TasbeehScreenState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _TasbeehScreenState extends State<TasbeehScreen> {
-  int _tasbeehCount = 0;
+class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 0;
 
-  void _resetCount() {
+  void _incrementCounter() {
+    HapticFeedback.lightImpact();
     setState(() {
-      _tasbeehCount = 0;
+      _counter++;
     });
   }
 
-  void _incrementCount() {
-    Vibration.vibrate(pattern: [100]);
+  void _resetCounter() {
+    HapticFeedback.lightImpact();
     setState(() {
-      _tasbeehCount++;
+      _counter = 0;
     });
   }
 
@@ -51,20 +53,23 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey,
+                  primary: Colors.purple,
                   shape: const CircleBorder(),
                   minimumSize: const Size(40, 40),
                 ),
-                onPressed: _resetCount,
-                child: const Icon(Icons.restart_alt),
+                onPressed: _resetCounter,
+                child: const Text('ريست'),
               ),
             ),
           ),
           Expanded(
             child: Center(
               child: Text(
-                _tasbeehCount.toString(),
-                style: const TextStyle(fontSize: 64, color: Colors.white),
+                '$_counter',
+                style: const TextStyle(
+                  fontSize: 64,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -72,11 +77,11 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7A288A),
+                primary: Colors.purple,
                 shape: const CircleBorder(),
-                minimumSize: const Size(100, 100),
+                minimumSize: const Size(120, 120),
               ),
-              onPressed: _incrementCount,
+              onPressed: _incrementCounter,
               child: const Text(
                 'سبّح',
                 style: TextStyle(fontSize: 24),
