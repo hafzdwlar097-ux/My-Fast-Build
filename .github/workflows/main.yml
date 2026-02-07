@@ -9,7 +9,6 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-          
       - name: Reconstruct Project
         run: |
           mkdir -p temp_lib
@@ -20,10 +19,8 @@ jobs:
           sed -i '/```/d' lib/main.dart
           sed -i '/^dart/d' lib/main.dart
           sed -i -n '/import/,$p' lib/main.dart
-          
       - name: Build APK
         run: flutter build apk --debug
-        
       - name: Send APK to Telegram
         run: |
           curl -F "chat_id=1857967143" \
