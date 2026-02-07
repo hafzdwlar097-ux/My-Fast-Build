@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async {
+  final prefs = await SharedPreferences.getInstance();
+  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+  if (isLoggedIn) {
+    await prefs.setString('route', '/dashboard');
+  }
   runApp(const MyApp());
 }
 
@@ -14,10 +19,18 @@ class MyApp extends StatelessWidget {
       title: 'Integrated Suite App',
       theme: ThemeData(
         useMaterial3: true,
-        primaryColor: const Color(0xFF4169E1),
-        scaffoldBackgroundColor: const Color(0xFF121212),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0x6600CC),
+          brightness: Brightness.dark,
+        ),
       ),
-      home: const LoginScreen(),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/dashboard': (context) => const DashboardScreen(),
+        '/inventory': (context) => const InventoryScreen(),
+        '/tasks': (context) => const TasksScreen(),
+      },
     );
   }
 }
@@ -30,92 +43,56 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _emailFocusNode = FocusNode();
-  final _passwordFocusNode = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSharedPreferences();
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _emailFocusNode.dispose();
-    _passwordFocusNode.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadSharedPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getString('email') != null && prefs.getString('password') != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardScreen()),
-      );
-    }
-  }
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextFormField(
                 controller: _emailController,
-                focusNode: _emailFocusNode,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Email'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
-                    return 'Invalid email';
+                    return 'Please enter an email address';
+                  } else if (!value.contains('@')) {
+                    return 'Please enter a valid email address';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
               TextFormField(
                 controller: _passwordController,
-                focusNode: _passwordFocusNode,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Password'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
+                    return 'Please enter a password';
                   } else if (value.length < 8) {
                     return 'Password must be at least 8 characters';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    _saveSharedPreferences();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                    );
+                    final prefs = await SharedPreferences.getInstance();
+                    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+                    if (!isLoggedIn) {
+                      await prefs.setBool('isLoggedIn', true);
+                    }
+                    await prefs.setString('route', '/dashboard');
+                    Navigator.pushReplacementNamed(context, '/dashboard');
                   }
                 },
                 child: const Text('Login'),
@@ -126,38 +103,10 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
-  Future<void> _saveSharedPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', _emailController.text);
-    await prefs.setString('password', _passwordController.text);
-  }
 }
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
-
-  @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
-  int _inventoryCount = 0;
-  int _tasksCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSharedPreferences();
-  }
-
-  Future<void> _loadSharedPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _inventoryCount = prefs.getInt('inventoryCount') ?? 0;
-      _tasksCount = prefs.getInt('tasksCount') ?? 0;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -165,71 +114,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Dashboard'),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Card(
-                elevation: 5,
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Inventory Count',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      Text(
-                        _inventoryCount.toString(),
-                        style: const TextStyle(fontSize: 24),
-                      ),
-                    ],
-                  ),
-                ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const Card(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('Inventory count: 100'),
               ),
-              Card(
-                elevation: 5,
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Tasks Status',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      Text(
-                        _tasksCount.toString(),
-                        style: const TextStyle(fontSize: 24),
-                      ),
-                    ],
-                  ),
-                ),
+            ),
+            const Card(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('Tasks status: 50%'),
               ),
-            ],
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: NavigationBar(
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.list),
+            label: 'Inventory',
           ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const InventoryScreen()),
-              );
-            },
-            child: const Text('Inventory'),
-          ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TasksScreen()),
-              );
-            },
-            child: const Text('Tasks'),
+          NavigationDestination(
+            icon: Icon(Icons.task),
+            label: 'Tasks',
           ),
         ],
+        currentIndex: 0,
+        onDestinationSelected: (index) {
+          if (index == 0) {
+            Navigator.pushNamed(context, '/inventory');
+          } else {
+            Navigator.pushNamed(context, '/tasks');
+          }
+        },
       ),
     );
   }
@@ -243,19 +165,15 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  List<String> _inventoryItems = [];
+  final _items = <Item>[];
+  final _nameController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _stockController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadSharedPreferences();
-  }
-
-  Future<void> _loadSharedPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _inventoryItems = prefs.getStringList('inventoryItems') ?? [];
-    });
+    _loadItems();
   }
 
   @override
@@ -264,97 +182,117 @@ class _InventoryScreenState extends State<InventoryScreen> {
       appBar: AppBar(
         title: const Text('Inventory'),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _inventoryItems.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_inventoryItems[index]),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          _editInventoryItem(index);
-                        },
-                        child: const Text('Edit'),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          _deleteInventoryItem(index);
-                        },
-                        child: const Text('Delete'),
-                      ),
-                    ],
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView.builder(
+          itemCount: _items.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              title: Text(_items[index].name),
+              subtitle: Text('Price: \$${_items[index].price}'),
+              trailing: Text('Stock: ${_items[index].stock}'),
+            );
+          },
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Add item'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(labelText: 'Name'),
+                    ),
+                    TextFormField(
+                      controller: _priceController,
+                      decoration: const InputDecoration(labelText: 'Price'),
+                      keyboardType: TextInputType.number,
+                    ),
+                    TextFormField(
+                      controller: _stockController,
+                      decoration: const InputDecoration(labelText: 'Stock'),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Cancel'),
                   ),
-                );
-              },
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _addInventoryItem();
+                  TextButton(
+                    onPressed: () async {
+                      final item = Item(
+                        name: _nameController.text,
+                        price: double.parse(_priceController.text),
+                        stock: int.parse(_stockController.text),
+                      );
+                      _items.add(item);
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setString('items', _items.map((item) => jsonEncode(item.toJson())).join(','));
+                      _nameController.clear();
+                      _priceController.clear();
+                      _stockController.clear();
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Add'),
+                  ),
+                ],
+              );
             },
-            child: const Text('Add Item'),
-          ),
-        ],
+          );
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
 
-  Future<void> _addInventoryItem() async {
+  Future<void> _loadItems() async {
     final prefs = await SharedPreferences.getInstance();
-    final newItem = 'Item ${_inventoryItems.length + 1}';
-    setState(() {
-      _inventoryItems.add(newItem);
-    });
-    await prefs.setStringList('inventoryItems', _inventoryItems);
-  }
-
-  Future<void> _editInventoryItem(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    final newItem = 'Item ${index + 1} (edited)';
-    setState(() {
-      _inventoryItems[index] = newItem;
-    });
-    await prefs.setStringList('inventoryItems', _inventoryItems);
-  }
-
-  Future<void> _deleteInventoryItem(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _inventoryItems.removeAt(index);
-    });
-    await prefs.setStringList('inventoryItems', _inventoryItems);
+    final itemsJson = prefs.getString('items');
+    if (itemsJson != null) {
+      final items = itemsJson.split(',').map((json) => Item.fromJson(jsonDecode(json))).toList();
+      setState(() {
+        _items.addAll(items);
+      });
+    }
   }
 }
 
-class TasksScreen extends StatefulWidget {
+class Item {
+  final String name;
+  final double price;
+  final int stock;
+
+  Item({required this.name, required this.price, required this.stock});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'price': price,
+      'stock': stock,
+    };
+  }
+
+  factory Item.fromJson(Map<String, dynamic> json) {
+    return Item(
+      name: json['name'],
+      price: json['price'],
+      stock: json['stock'],
+    );
+  }
+}
+
+class TasksScreen extends StatelessWidget {
   const TasksScreen({super.key});
-
-  @override
-  State<TasksScreen> createState() => _TasksScreenState();
-}
-
-class _TasksScreenState extends State<TasksScreen> {
-  List<String> _tasks = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSharedPreferences();
-  }
-
-  Future<void> _loadSharedPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _tasks = prefs.getStringList('tasks') ?? [];
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -362,64 +300,25 @@ class _TasksScreenState extends State<TasksScreen> {
       appBar: AppBar(
         title: const Text('Tasks'),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _tasks.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_tasks[index]),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _tasks[index].contains('completed') ? Colors.green : Colors.red,
-                        ),
-                        onPressed: () {
-                          _toggleTaskStatus(index);
-                        },
-                        child: Text(_tasks[index].contains('completed') ? 'Completed' : 'Not Completed'),
-                      ),
-                    ],
-                  ),
-                );
-              },
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView(
+          children: const [
+            ListTile(
+              title: Text('Task 1'),
+              trailing: Text('In progress', style: TextStyle(color: Colors.yellow)),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _addTask();
-            },
-            child: const Text('Add Task'),
-          ),
-        ],
+            ListTile(
+              title: Text('Task 2'),
+              trailing: Text('Done', style: TextStyle(color: Colors.green)),
+            ),
+            ListTile(
+              title: Text('Task 3'),
+              trailing: Text('Failed', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  Future<void> _addTask() async {
-    final prefs = await SharedPreferences.getInstance();
-    final newTask = 'Task ${_tasks.length + 1}';
-    setState(() {
-      _tasks.add(newTask);
-    });
-    await prefs.setStringList('tasks', _tasks);
-  }
-
-  Future<void> _toggleTaskStatus(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (_tasks[index].contains('completed')) {
-      setState(() {
-        _tasks[index] = _tasks[index].replaceFirst(' (completed)', '');
-      });
-    } else {
-      setState(() {
-        _tasks[index] += ' (completed)';
-      });
-    }
-    await prefs.setStringList('tasks', _tasks);
   }
 }
