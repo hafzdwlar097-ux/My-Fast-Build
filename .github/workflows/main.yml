@@ -1,5 +1,5 @@
 
-name: Flutter Final Builder
+name: Flutter Final Fix
 on: [push]
 jobs:
   build:
@@ -9,15 +9,17 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-      - name: Create Project
+      - name: Force Clean Code
         run: |
-          flutter create --org com.ibrahim --project-name my_app .
-          # التأكد من تنظيف كود main.dart قبل البناء
-          sed -i '/^` ` `/d' lib/main.dart
+          # تنظيف الملف من أي علامات Markdown قد تأتي من الـ AI
+          sed -i 's/```dart//g' lib/main.dart
+          sed -i 's/```//g' lib/main.dart
+          # حذف السطور الفارغة في البداية
+          sed -i '././,$!d' lib/main.dart
       - name: Build APK
         run: flutter build apk --debug
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Clean-App
+          name: Final-App
           path: build/app/outputs/flutter-apk/app-debug.apk
