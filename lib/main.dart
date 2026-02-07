@@ -1,5 +1,5 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:vibration/vibration.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,82 +11,81 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: MyHomePage(),
+      title: 'مسبحة إلكترونية',
+      home: TasbeehScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+class TasbeehScreen extends StatefulWidget {
+  const TasbeehScreen({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<TasbeehScreen> createState() => _TasbeehScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _TasbeehScreenState extends State<TasbeehScreen> {
+  int _count = 0;
+  final HapticFeedback _hapticFeedback = HapticFeedback.heavy;
 
   void _incrementCounter() {
+    _hapticFeedback.vibrate();
     setState(() {
-      _counter++;
+      _count++;
     });
-    Vibration.vibrate();
   }
 
   void _resetCounter() {
+    _hapticFeedback.vibrate();
     setState(() {
-      _counter = 0;
+      _count = 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Align(
-              alignment: Alignment.topRight,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.purple,
-                  shape: const CircleBorder(),
-                  padding: const EdgeInsets.all(8.0),
-                ),
-                onPressed: _resetCounter,
-                child: const Text(
-                  'Reset',
-                  style: TextStyle(fontSize: 16),
+      body: Container(
+        decoration: const BoxDecoration(
+          color: Colors.black,
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey,
+                    foregroundColor: Colors.white,
+                    shape: const CircleBorder(),
+                    minimumSize: const Size(40, 40),
+                  ),
+                  onPressed: _resetCounter,
+                  child: const Text('Reset'),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: Center(
-              child: Text(
-                _counter.toString(),
-                style: const TextStyle(fontSize: 64, color: Colors.white),
-              ),
+            const Expanded(child: SizedBox()),
+            Text(
+              '$_count',
+              style: const TextStyle(fontSize: 64, color: Colors.white),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
+            const SizedBox(height: 16),
+            ElevatedButton(
               style: ElevatedButton.styleFrom(
-                primary: Colors.purple,
+                backgroundColor: const Color(0xFF7A288A), // Purple
+                foregroundColor: Colors.white,
                 shape: const CircleBorder(),
-                padding: const EdgeInsets.all(16.0),
+                minimumSize: const Size(100, 100),
               ),
               onPressed: _incrementCounter,
-              child: const Text(
-                'سبّح',
-                style: TextStyle(fontSize: 24),
-              ),
+              child: const Text('سبّح', style: TextStyle(fontSize: 24)),
             ),
-          ),
-        ],
+            const Expanded(child: SizedBox()),
+          ],
+        ),
       ),
     );
   }
