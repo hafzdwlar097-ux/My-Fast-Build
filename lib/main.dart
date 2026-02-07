@@ -1,179 +1,138 @@
 ```dart
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:http/server.dart';
+import 'package:file_picker/file_picker.dart';
 
 void main() {
-    runApp(const MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-    const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
-    @override
-    Widget build(BuildContext context) {
-        return MaterialApp(
-            title: 'Habit Tracker',
-            theme: ThemeData(
-                scaffoldBackgroundColor: const Color(0xFF000000),
-                cardColor: const Color(0xFF333333),
-                textTheme: const TextTheme(
-                    headline1: TextStyle(
-                        color: Color(0xFFFFFFFF),
-                        fontSize: 24,
-                    ),
-                    headline2: TextStyle(
-                        color: Color(0xFFFFFFFF),
-                        fontSize: 18,
-                    ),
-                ),
-            ),
-            home: const MyHomePage(),
-        );
-    }
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      title: 'FastBridge',
+      home: MyHomePage(),
+    );
+  }
 }
 
 class MyHomePage extends StatefulWidget {
-    const MyHomePage({super.key});
+  const MyHomePage({Key? key}) : super(key: key);
 
-    @override
-    State<MyHomePage> createState() => _MyHomePageState();
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-    final List<Habit> _habits = [];
-    final _textController = TextEditingController();
+  final _ipController = TextEditingController();
+  final _speedController = TextEditingController();
+  late HttpServer _server;
+  late String _selectedFile;
+  late File file;
 
-    Future<void> _saveHabits() async {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('habits', jsonEncode(_habits));
+  @override
+  void dispose() {
+    _ipController.dispose();
+    _speedController.dispose();
+    if (_server != null) {
+      _server.close();
     }
+    super.dispose();
+  }
 
-    Future<void> _loadHabits() async {
-        final prefs = await SharedPreferences.getInstance();
-        final habitsString = prefs.getString('habits');
-        if (habitsString != null) {
-            final List<Map<String, dynamic>> habitsMap = jsonDecode(habitsString);
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('FastBridge'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            ElevatedButton(
+              onPressed: _sendFile,
+              child: const Text('إرسال'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _receiveFile,
+              child: const Text('استقبال'),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _ipController,
+              readOnly: true,
+              decoration: const InputDecoration(
+                labelText: 'عنوان الـ IP',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _speedController,
+              readOnly: true,
+              decoration: const InputDecoration(
+                labelText: 'سرعة النقل',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _sendFile() async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      setState(() {
+        _selectedFile = result.files.first.path ?? '';
+      });
+      file = File(_selectedFile);
+      await _sendFileToServer(file);
+    }
+  }
+
+  void _receiveFile() async {
+    await HttpServer.bind(InternetAddress.anyIPv4, 8080).then((server) {
+      _server = server;
+      setState(() {
+        _ipController.text = 'http://${_server.address.address}:${_server.port}';
+      });
+      server.listen((request) {
+        if (request.method == 'POST') {
+          request.listen((data) {
+            final file = File('ReceivedFile');
+            file.writeAsBytesSync(data);
             setState(() {
-                _habits.addAll(habitsMap.map((habit) => Habit(
-                    habit['name'],
-                    habit['done'],
-                )).toList());
+              _speedController.text = 'تم استلام الملف';
             });
+          });
         }
+      });
+    });
+  }
+
+  Future _sendFileToServer(File file) async {
+    final url = Uri.parse(_ipController.text);
+    final request = http.MultipartRequest('POST', url);
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      await file.readAsBytes(),
+      filename: file.path.split('/').last,
+    ));
+    final response = await request.send();
+    if (response.statusCode == 200) {
+      setState(() {
+        _speedController.text = 'تم إرسال الملف بنجاح';
+      });
     }
-
-    @override
-    void initState() {
-        super.initState();
-        _loadHabits();
-    }
-
-    void _addHabit() {
-        setState(() {
-            _habits.add(Habit(_textController.text, false));
-            _saveHabits();
-            _textController.clear();
-        });
-    }
-
-    void _toggleHabit(int index) {
-        setState(() {
-            _habits[index].done = !_habits[index].done;
-            _saveHabits();
-        });
-    }
-
-    void _removeHabit(int index) {
-        setState(() {
-            _habits.removeAt(index);
-            _saveHabits();
-        });
-    }
-
-    @override
-    Widget build(BuildContext context) {
-        return Scaffold(
-            appBar: AppBar(
-                title: const Text('Habit Tracker'),
-            ),
-            body: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                    children: [
-                        Row(
-                            children: [
-                                Expanded(
-                                    child: TextField(
-                                        controller: _textController,
-                                        style: const TextStyle(
-                                            color: Color(0xFFFFFFFF),
-                                        ),
-                                        decoration: const InputDecoration(
-                                            border: OutlineInputBorder(),
-                                            hintStyle: TextStyle(
-                                                color: Color(0xFFFFFFFF),
-                                            ),
-                                            hintText: 'New Habit',
-                                        ),
-                                    ),
-                                ),
-                                const SizedBox(width: 8),
-                                ElevatedButton(
-                                    onPressed: _addHabit,
-                                    child: const Text('Add'),
-                                ),
-                            ],
-                        ),
-                        const SizedBox(height: 16),
-                        Expanded(
-                            child: _habits.isEmpty
-                                ? const Center(
-                                    child: Text('No Habits Added'),
-                                )
-                                : ListView.builder(
-                                    itemCount: _habits.length,
-                                    itemBuilder: (context, index) {
-                                        return Card(
-                                            child: ListTile(
-                                                leading: Checkbox(
-                                                    value: _habits[index].done,
-                                                    onChanged: (value) {
-                                                        _toggleHabit(index);
-                                                    },
-                                                ),
-                                                title: Text(
-                                                    _habits[index].name,
-                                                ),
-                                                trailing: IconButton(
-                                                    icon: const Icon(Icons.delete),
-                                                    onPressed: () {
-                                                        _removeHabit(index);
-                                                    },
-                                                ),
-                                            ),
-                                        );
-                                    },
-                                ),
-                        ),
-                    ],
-                ),
-            ),
-        );
-    }
-}
-
-class Habit {
-    final String name;
-    bool done;
-
-    Habit(this.name, this.done);
-
-    Map<String, dynamic> toJson() {
-        return {
-            'name': name,
-            'done': done,
-        };
-    }
+  }
 }
 ```
