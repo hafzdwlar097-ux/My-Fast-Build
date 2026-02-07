@@ -1,5 +1,5 @@
 
-name: Flutter Full Recovery Build
+name: Flutter Build
 on: [push]
 jobs:
   build:
@@ -10,24 +10,11 @@ jobs:
         with:
           flutter-version: '3.19.0'
       
-      - name: Force Re-Create Android Project
-        run: |
-          # حفظ ملف الكود الأساسي مؤقتاً
-          mkdir -p temp_lib
-          [ -f lib/main.dart ] && cp lib/main.dart temp_lib/main.dart || echo "void main(){}" > temp_lib/main.dart
-          
-          # مسح شامل للهيكل المعطوب (باستثناء ملفات الجيت)
-          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
-          
-          # إعادة إنشاء مشروع فلاتر نظيف 100% بنظام Android v2
-          flutter create --org com.ibrahim --project-name my_app .
-          
-          # استرجاع كود التطبيق
-          cp temp_lib/main.dart lib/main.dart
-
       - name: Build APK
-        run: flutter build apk --release
-
-      - name: Send APK to Telegram
         run: |
-          curl -F "chat_id=1857967143"                -F "document=@build/app/outputs/flutter-apk/app-release.apk"                -F "caption=✅ تم الإصلاح الشامل والـ APK جاهز!"                "https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument"
+          flutter pub get
+          flutter build apk --release
+          
+      - name: Send to Telegram
+        run: |
+          curl -F "chat_id=1857967143"                -F "document=@build/app/outputs/flutter-apk/app-release.apk"                -F "caption=✅ أخيراً يا إبراهيم! التطبيق شغال وجاهز."                "https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument"
