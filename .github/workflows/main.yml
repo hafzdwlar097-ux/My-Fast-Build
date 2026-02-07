@@ -1,5 +1,5 @@
 
-name: Flutter Super Builder
+name: Flutter Dart Cleaner
 on: [push]
 jobs:
   build:
@@ -9,13 +9,27 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-          channel: 'stable'
-      - name: Install dependencies
-        run: flutter pub get
+          
+      - name: Force Clean Dart Code
+        run: |
+          # لو المجلد مش موجود بننشئه (احتياط)
+          if [ ! -d "lib" ]; then flutter create --org com.clean --project-name my_app . ; fi
+          
+          # حذف علامات الماركدوان ``` وكلمة dart الزائدة
+          sed -i '/```/d' lib/main.dart
+          sed -i '/^dart$/d' lib/main.dart
+          
+          # مسح أي عك قبل كلمة import عشان ملف الـ Dart يبدأ صح
+          sed -i -n '/import/,$p' lib/main.dart
+          
+          # تنسيق الكود عشان لو فيه مسافات غلط
+          dart format lib/main.dart || true
+
       - name: Build APK
         run: flutter build apk --debug
+        
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Flutter-App
+          name: Clean-App
           path: build/app/outputs/flutter-apk/app-debug.apk
