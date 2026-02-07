@@ -1,5 +1,5 @@
 
-name: Flutter Direct Build
+name: Flutter Full Recovery Build
 on: [push]
 jobs:
   build:
@@ -9,19 +9,25 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-          
-      - name: Setup Project Structure
+      
+      - name: Force Re-Create Android Project
         run: |
-          if [ ! -f "pubspec.yaml" ]; then
-            flutter create --org com.ibrahim --project-name my_app .
-          fi
+          # حفظ ملف الكود الأساسي مؤقتاً
+          mkdir -p temp_lib
+          [ -f lib/main.dart ] && cp lib/main.dart temp_lib/main.dart || echo "void main(){}" > temp_lib/main.dart
           
+          # مسح شامل للهيكل المعطوب (باستثناء ملفات الجيت)
+          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
+          
+          # إعادة إنشاء مشروع فلاتر نظيف 100% بنظام Android v2
+          flutter create --org com.ibrahim --project-name my_app .
+          
+          # استرجاع كود التطبيق
+          cp temp_lib/main.dart lib/main.dart
+
       - name: Build APK
-        run: flutter build apk --release --split-per-abi
-        
+        run: flutter build apk --release
+
       - name: Send APK to Telegram
         run: |
-          curl -v -F "chat_id=1857967143" \
-               -F "document=@build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk" \
-               -F "caption=✅ تم البناء بنجاح يا إبراهيم! تفضل التطبيق." \
-               "https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument"
+          curl -F "chat_id=1857967143"                -F "document=@build/app/outputs/flutter-apk/app-release.apk"                -F "caption=✅ تم الإصلاح الشامل والـ APK جاهز!"                "https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument"
