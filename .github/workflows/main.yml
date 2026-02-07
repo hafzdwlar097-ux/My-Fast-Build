@@ -1,25 +1,33 @@
-
-name: Flutter Direct Build
+name: Flutter Forced Clean Build
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
       
-      - name: Force Structure Sync
+      - name: 🔥 Deep Clean & Force Rebuild
         run: |
-          # التأكد من وجود ملف المانيفست في مكانه الصحيح
-          if [ ! -f "android/app/src/main/AndroidManifest.xml" ]; then
-            flutter create --org com.ibrahim --project-name my_app . --overwrite
-          fi
+          # تنظيف شامل للمخلفات القديمة
+          flutter clean
+          rm -rf build
+          
+          # إعادة إنشاء الهيكل لضمان وجود المانيفست الجديد
+          flutter create --org com.ibrahim.new --project-name fast_bridge_app . --overwrite
+          
+          # تحميل المكتبات من الصفر (ضروري لتغيير الكود)
+          flutter pub get
 
-      - name: Build APK
-        run: flutter build apk --release --no-pub
+      - name: 🏗️ Build Fresh APK
+        run: flutter build apk --release
 
-      - name: Send APK to Telegram
+      - name: 🚀 Send Fresh APK to Telegram
         run: |
-          curl -F "chat_id=1857967143"                -F "document=@build/app/outputs/flutter-apk/app-release.apk"                -F "caption=✅ تمت المهمة بنجاح يا إبراهيم!"                "https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument"
+          curl -F "chat_id=1857967143" \
+               -F "document=@build/app/outputs/flutter-apk/app-release.apk" \
+               -F "caption=🎯 المهمة نجحت! تم تدمير العداد وبناء تطبيقك الجديد." \
+               "https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument"
