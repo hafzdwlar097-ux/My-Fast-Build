@@ -11,11 +11,11 @@ jobs:
           flutter-version: '3.19.0'
       - name: Reconstruct Project
         run: |
-          mkdir temp_lib
-          cp lib/main.dart temp_lib/main.dart || echo ""
+          mkdir -p temp_lib
+          [ -f lib/main.dart ] && cp lib/main.dart temp_lib/main.dart || echo ""
           rm -rf *
           flutter create --org com.ibrahim --project-name my_app .
-          cp temp_lib/main.dart lib/main.dart || echo "void main(){}" > lib/main.dart
+          [ -f temp_lib/main.dart ] && cp temp_lib/main.dart lib/main.dart || echo "void main(){}" > lib/main.dart
           sed -i '/```/d' lib/main.dart
           sed -i '/^dart/d' lib/main.dart
           sed -i -n '/import/,$p' lib/main.dart
