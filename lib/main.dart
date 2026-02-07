@@ -1,27 +1,25 @@
+```dart
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+void main() {
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'تطبيق سبحة إلكترونية',
-      home: MyHomePage(),
+    return MaterialApp(
+      home: TasbeehScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
-
+class TasbeehScreen extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _TasbeehScreenState createState() => _TasbeehScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _TasbeehScreenState extends State<TasbeehScreen> {
   int _counter = 0;
 
   void _incrementCounter() {
@@ -40,42 +38,43 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.black,
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _counter.toString(),
-                style: const TextStyle(fontSize: 64, color: Colors.white),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '$_counter',
+              style: TextStyle(fontSize: 64, color: Colors.white),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                minimumSize: Size(200, 50),
               ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.green,
-                  minimumSize: const Size(200, 50),
-                ),
-                onPressed: _incrementCounter,
-                child: const Text(
-                  'سبح',
-                  style: TextStyle(fontSize: 24),
-                ),
+              onPressed: _incrementCounter,
+              child: Text(
+                'سبح',
+                style: TextStyle(fontSize: 24),
               ),
-              TextButton(
-                style: TextButton.styleFrom(
-                  primary: Colors.red,
-                ),
-                onPressed: _resetCounter,
-                child: const Text(
-                  'تصفير',
-                  style: TextStyle(fontSize: 18, color: Colors.red),
-                ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                minimumSize: Size(100, 30),
               ),
-            ],
-          ),
+              onPressed: _resetCounter,
+              child: Text(
+                'تصفير',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+```
