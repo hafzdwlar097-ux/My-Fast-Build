@@ -1,84 +1,77 @@
 import 'package:flutter/material.dart';
+import 'package:vibration/vibration.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final _controller = TextEditingController();
-  String _result = '';
+  int _counter = 0;
 
-  void _convertCurrency() {
-    if (_controller.text.isNotEmpty) {
-      double dollarAmount = double.parse(_controller.text);
-      double egyptianPoundAmount = dollarAmount * 50;
-      setState(() {
-        _result = '$dollarAmount \$ = $egyptianPoundAmount جنيه';
-      });
-    } else {
-      setState(() {
-        _result = '';
-      });
-    }
+  void _incrementCounter() {
+    setState(() {
+      _counter++;
+    });
+    Vibration.vibrate();
+  }
+
+  void _resetCounter() {
+    setState(() {
+      _counter = 0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Center(
-        child: Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 8,
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: _controller,
-                  decoration: const InputDecoration(
-                    labelText: 'المبلغ بالدولار',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: _convertCurrency,
-                  child: const Text('تحويل'),
-                ),
-                const SizedBox(height: 16),
-                Text(_result),
-              ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              '$_counter',
+              style: TextStyle(fontSize: 64, color: Colors.white),
             ),
-          ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.purple),
+                shape: MaterialStateProperty.all(CircleBorder()),
+                padding: MaterialStateProperty.all(EdgeInsets.all(20)),
+              ),
+              onPressed: _incrementCounter,
+              child: Text(
+                'سبّح',
+                style: TextStyle(fontSize: 24, color: Colors.white),
+              ),
+            ),
+          ],
         ),
+      ),
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.restore, color: Colors.white),
+            onPressed: _resetCounter,
+          ),
+        ],
       ),
     );
   }
