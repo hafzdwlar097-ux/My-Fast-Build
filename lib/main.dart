@@ -1,202 +1,168 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Habit Tracker',
+      theme: ThemeData(
+        scaffoldBackgroundColor: const Color(0xff000000),
+        useMaterial3: true,
+        colorScheme: const ColorScheme(
+          primary: Color(0xff03a9f4),
+          onPrimary: Color(0xff000000),
+          secondary: Color(0xff8bc34a),
+          onSecondary: Color(0xff000000),
+          surface: Color(0xff000000),
+          onSurface: Color(0xffffffff),
+          background: Color(0xff000000),
+          onBackground: Color(0xffffffff),
+          error: Color(0xffb00020),
+          onError: Color(0xffffffff),
+          brightness: Brightness.dark,
+        ),
+      ),
+      home: const MyHomePage(),
+    );
+  }
 }
 
-class _MyAppState extends State<MyApp> {
-  List<Habit> habits = [];
-  double consistencyMeter = 0.0;
-  final _formKey = GlobalKey<FormState>();
-  final _habitController = TextEditingController();
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
 
   @override
-  void initState() {
-    super.initState();
-    _loadHabits();
-  }
+  State<MyHomePage> createState() => _MyHomePageState();
+}
 
-  Future<void> _loadHabits() async {
+class _MyHomePageState extends State<MyHomePage> {
+  List<String> habits = [];
+  List<bool> habitStatus = [];
+  List<String> habitDescriptions = [];
+
+  Future<void> _getHabits() async {
     final prefs = await SharedPreferences.getInstance();
-    final habitsJson = prefs.getString('habits');
-    if (habitsJson != null) {
-      final habitsList = jsonDecode(habitsJson) as List;
+    final habitList = prefs.getStringList('habits');
+    final habitStatusList = prefs.getStringList('habitStatus');
+    final habitDescriptionsList = prefs.getStringList('habitDescriptions');
+
+    if (habitList != null) {
       setState(() {
-        habits = habitsList.map((habit) => Habit.fromJson(habit)).toList();
-        _updateConsistencyMeter();
+        habits = habitList;
+      });
+    }
+
+    if (habitStatusList != null) {
+      setState(() {
+        habitStatus = habitStatusList.map((e) => e == 'true').toList();
+      });
+    }
+
+    if (habitDescriptionsList != null) {
+      setState(() {
+        habitDescriptions = habitDescriptionsList;
       });
     }
   }
 
   Future<void> _saveHabits() async {
     final prefs = await SharedPreferences.getInstance();
-    final habitsJson = jsonEncode(habits.map((habit) => habit.toJson()).toList());
-    await prefs.setString('habits', habitsJson);
+    await prefs.setStringList('habits', habits);
+    await prefs.setStringList('habitStatus', habitStatus.map((e) => e.toString()).toList());
+    await prefs.setStringList('habitDescriptions', habitDescriptions);
   }
 
-  void _addHabit() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        habits.add(Habit(name: _habitController.text, completed: false));
-        _updateConsistencyMeter();
-      });
-      _saveHabits();
-      _habitController.clear();
-    }
-  }
-
-  void _toggleHabit(Habit habit) {
-    setState(() {
-      habit.completed = !habit.completed;
-      _updateConsistencyMeter();
-    });
-    _saveHabits();
-    if (habits.every((h) => h.completed)) {
-      HapticFeedback.vibrate();
-      _showCelebratoryMessage();
-    }
-  }
-
-  void _updateConsistencyMeter() {
-    final completedHabits = habits.where((habit) => habit.completed).length;
-    consistencyMeter = completedHabits / habits.length;
-  }
-
-  void _showCelebratoryMessage() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('تحياتنا!'),
-        content: const Text('لقد أكملت جميع العادات اليوم!"),
-        actions: [
-          TextButton(
-            child: const Text('حسنا'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _getHabits();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Habit Radar',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSwatch(
-          primarySwatch: Colors.grey,
-          background: Colors.black,
-        ).copyWith(
-          surface: const Color(0xFF333333),
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Habit Tracker'),
       ),
-      home: Scaffold(
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: LinearProgressIndicator(
-                value: consistencyMeter,
-                backgroundColor: Colors.grey[700],
-                color: consistencyMeter < 0.5 ? Colors.red : Colors.green,
-              ),
-            ),
-            const Text(
-              'مقياس الاستمرارية',
-              style: TextStyle(fontSize: 18, color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: habits.length,
-                itemBuilder: (context, index) {
-                  final habit = habits[index];
-                  return Card(
-                    color: const Color(0xFF444444),
-                    child: ListTile(
-                      title: Text(
-                        habit.name,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      trailing: IconButton(
-                        icon: Icon(
-                          habit.completed ? Icons.check_circle : Icons.circle,
-                          color: habit.completed ? Colors.green : Colors.red,
-                        ),
-                        onPressed: () => _toggleHabit(habit),
-                      ),
-                    ),
-                  );
+      body: ListView.builder(
+        itemCount: habits.length,
+        itemBuilder: (context, index) {
+          return Card(
+            color: const Color(0xff121212),
+            elevation: 10,
+            child: ListTile(
+              title: Text('"' + habits[index] + '"'),
+              subtitle: Text('"' + habitDescriptions[index] + '"'),
+              trailing: Checkbox(
+                value: habitStatus[index],
+                onChanged: (value) {
+                  setState(() {
+                    habitStatus[index] = value ?? false;
+                  });
+                  _saveHabits();
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Row(
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) {
+              final _habitController = TextEditingController();
+              final _habitDescriptionController = TextEditingController();
+              return AlertDialog(
+                title: const Text('Add Habit'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _habitController,
-                        decoration: const InputDecoration(
-                          labelText: 'إضافة عادة جديدة',
-                          labelStyle: TextStyle(color: Colors.white),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'الرجاء إدخال اسم للعادة';
-                          }
-                          return null;
-                        },
-                      ),
+                    TextField(
+                      controller: _habitController,
+                      decoration: const InputDecoration(hintText: 'Habit'),
                     ),
-                    const SizedBox(width: 16),
-                    ElevatedButton(
-                      onPressed: _addHabit,
-                      child: const Text('حفظ'),
+                    TextField(
+                      controller: _habitDescriptionController,
+                      decoration: const InputDecoration(hintText: 'Description'),
                     ),
                   ],
                 ),
-              ),
-            ),
-          ],
-        ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        habits.add(_habitController.text);
+                        habitStatus.add(false);
+                        habitDescriptions.add(_habitDescriptionController.text);
+                      });
+                      _saveHabits();
+                      Navigator.pop(context);
+                      _habitController.clear();
+                      _habitDescriptionController.clear();
+                    },
+                    child: const Text('Add'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: const Icon(Icons.add),
       ),
     );
-  }
-}
-
-class Habit {
-  final String name;
-  bool completed;
-
-  Habit({required this.name, this.completed = false});
-
-  factory Habit.fromJson(Map<String, dynamic> json) {
-    return Habit(
-      name: json['name'],
-      completed: json['completed'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'completed': completed,
-    };
   }
 }
