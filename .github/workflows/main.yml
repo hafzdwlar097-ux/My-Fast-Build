@@ -1,34 +1,25 @@
-name: Ultimate Clean Build
+name: Force Clean Build
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          channel: 'stable'
       
-      - name: 💣 تدمير الذاكرة القديمة وبناء من الصفر
-        run: |
-          # مسح كل مخلفات البناء ومجلد أندرويد
-          flutter clean
-          rm -rf build
-          rm -rf android
-          
-          # إعادة إنشاء المشروع بهوية جديدة (ID جديد)
-          # تغيير com.ibrahim لـ com.brhom.tech عشان الموبايل ميعتبروش تحديث
-          flutter create --org com.brhom.tech --project-name fastbridge_new . --overwrite
-          
-          # تحميل المكتبات
-          flutter pub get
+      - name: Force Clean
+        run: flutter clean # هذا الأمر يمسح أي أثر للتطبيق القديم قبل البناء
 
-      - name: 🏗️ بناء APK جديد تماماً
-        run: flutter build apk --release
+      - name: Install Dependencies
+        run: flutter pub get
 
-      - name: 🚀 إرسال الملف الجديد لتليجرام
-        run: |
-          curl -F "chat_id=1857967143" \
-               -F "document=@build/app/outputs/flutter-apk/app-release.apk" \
-               -F "caption=🔥 المرة دي مفيش عداد! ده تطبيقك الجديد 100%." \
-               "https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument"
+      - name: Build APK
+        run: flutter build apk --release --no-tree-shake-icons # بناء نسخة جديدة تماماً
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
