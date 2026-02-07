@@ -1,0 +1,30 @@
+
+name: Smart Builder
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Buildozer Spec
+        run: |
+          cat <<EOT > buildozer.spec
+          [app]
+          title = MyApp
+          package.name = myapp
+          package.domain = org.test
+          source.dir = .
+          version = 0.1
+          requirements = python3,kivy
+          orientation = portrait
+          android.archs = arm64-v8a
+          EOT
+      - name: Install & Build
+        run: |
+          pip install buildozer cython kivy
+          yes | buildozer android debug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: App-Package
+          path: bin/*.apk
