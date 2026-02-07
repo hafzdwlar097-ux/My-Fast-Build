@@ -1,5 +1,5 @@
 
-name: Flutter Dart Cleaner
+name: Flutter Auto Fix and Build
 on: [push]
 jobs:
   build:
@@ -9,20 +9,22 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-          
-      - name: Force Clean Dart Code
+
+      - name: Reconstruct Flutter Project
         run: |
-          # لو المجلد مش موجود بننشئه (احتياط)
-          if [ ! -d "lib" ]; then flutter create --org com.clean --project-name my_app . ; fi
+          # مسح أي ملفات قديمة مسببة تعارض ما عدا ملف الكود
+          mkdir temp_lib
+          cp lib/main.dart temp_lib/main.dart || echo "No file yet"
+          rm -rf *
           
-          # حذف علامات الماركدوان ``` وكلمة dart الزائدة
+          # إنشاء مشروع جديد بهيكل أندرويد سليم
+          flutter create --org com.ibrahim --project-name my_app .
+          
+          # استرجاع ملف الكود وتنظيفه
+          cp temp_lib/main.dart lib/main.dart || echo "void main() {}" > lib/main.dart
           sed -i '/```/d' lib/main.dart
           sed -i '/^dart$/d' lib/main.dart
-          
-          # مسح أي عك قبل كلمة import عشان ملف الـ Dart يبدأ صح
           sed -i -n '/import/,$p' lib/main.dart
-          
-          # تنسيق الكود عشان لو فيه مسافات غلط
           dart format lib/main.dart || true
 
       - name: Build APK
@@ -31,5 +33,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Clean-App
+          name: Fixed-App
           path: build/app/outputs/flutter-apk/app-debug.apk
