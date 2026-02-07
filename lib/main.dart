@@ -1,95 +1,84 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:vibration/vibration.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: TasbeehScreen(),
+      home: MyHomePage(),
     );
   }
 }
 
-class TasbeehScreen extends StatefulWidget {
-  const TasbeehScreen({Key? key}) : super(key: key);
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
 
   @override
-  State<TasbeehScreen> createState() => _TasbeehScreenState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _TasbeehScreenState extends State<TasbeehScreen> {
-  int _count = 0;
+class _MyHomePageState extends State<MyHomePage> {
+  final _controller = TextEditingController();
+  String _result = '';
 
-  void _incrementCounter() {
-    setState(() {
-      _count++;
-      Vibration.vibrate(pattern: [100, 100, 100, 100]);
-    });
-  }
-
-  void _resetCounter() {
-    setState(() {
-      _count = 0;
-    });
+  void _convertCurrency() {
+    if (_controller.text.isNotEmpty) {
+      double dollarAmount = double.parse(_controller.text);
+      double egyptianPoundAmount = dollarAmount * 50;
+      setState(() {
+        _result = '$dollarAmount \$ = $egyptianPoundAmount جنيه';
+      });
+    } else {
+      setState(() {
+        _result = '';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF000000),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  primary: const Color(0xFF000000),
-                  padding: const EdgeInsets.all(8),
-                  shape: const CircleBorder(),
-                  minimumSize: const Size(40, 40),
+      body: Center(
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 8,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _controller,
+                  decoration: const InputDecoration(
+                    labelText: 'المبلغ بالدولار',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
                 ),
-                onPressed: _resetCounter,
-                child: const Icon(
-                  Icons.restart_alt,
-                  color: Colors.white,
-                  size: 24,
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: _convertCurrency,
+                  child: const Text('تحويل'),
                 ),
-              ),
+                const SizedBox(height: 16),
+                Text(_result),
+              ],
             ),
           ),
-          Expanded(
-            child: Center(
-              child: Text(
-                '$_count',
-                style: const TextStyle(fontSize: 64, color: Colors.white),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary: const Color(0xFF7A288A),
-                shape: const CircleBorder(),
-                minimumSize: const Size(120, 120),
-              ),
-              onPressed: _incrementCounter,
-              child: const Text(
-                'سبّح',
-                style: TextStyle(fontSize: 24),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
