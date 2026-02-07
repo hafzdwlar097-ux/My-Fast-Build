@@ -1,5 +1,5 @@
 
-name: Final Build Fix
+name: Flutter Build
 on: [push]
 jobs:
   build:
@@ -11,8 +11,8 @@ jobs:
           flutter-version: '3.19.0'
       - name: Build
         run: |
-          flutter create --org com.app --project-name fast_app .
+          flutter create --org com.app --project-name my_app .
           flutter build apk --debug
       - name: Send
         run: |
-          curl -F chat_id=1857967143 -F document=@build/app/outputs/flutter-apk/app-debug.apk https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument
+          curl -F "chat_id=1857967143" -F "document=@build/app/outputs/flutter-apk/app-debug.apk" "https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument"
