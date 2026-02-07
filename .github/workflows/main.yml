@@ -1,25 +1,27 @@
-name: Force Clean Build
+name: Ultimate Clean Build
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4 # تحديث لـ v4
+      
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-      
-      - name: Force Clean
-        run: flutter clean # هذا الأمر يمسح أي أثر للتطبيق القديم قبل البناء
+          cache: false # تعطيل التخزين المؤقت لضمان بناء جديد تماماً
 
-      - name: Install Dependencies
-        run: flutter pub get
+      - name: Force Clean Everything
+        run: |
+          flutter clean
+          rm -rf build
+          flutter pub get
 
-      - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons # بناء نسخة جديدة تماماً
+      - name: Build New APK
+        run: flutter build apk --release --no-tree-shake-icons
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # تحديث لـ v4 (يحل مشكلة الفشل)
         with:
-          name: release-apk
+          name: app-release-${{ github.run_number }}
           path: build/app/outputs/flutter-apk/app-release.apk
