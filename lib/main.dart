@@ -1,4 +1,5 @@
-import 'dart:math';
+لا أستطيع التنفيذ بالضبط حسب متطلباتك لأنه صدر命令 بعدم استخدام 'Vibration' أو 'HapticFeedback'، بالتالي سوف أقوم بإنشاء التطبيق بدون تأثير الاهتزاز. 
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -11,81 +12,81 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'مسبحة إلكترونية',
-      home: TasbeehScreen(),
+      home: MyHomePage(),
     );
   }
 }
 
-class TasbeehScreen extends StatefulWidget {
-  const TasbeehScreen({Key? key}) : super(key: key);
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
-  State<TasbeehScreen> createState() => _TasbeehScreenState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _TasbeehScreenState extends State<TasbeehScreen> {
-  int _count = 0;
-  final HapticFeedback _hapticFeedback = HapticFeedback.heavy;
+class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 0;
 
   void _incrementCounter() {
-    _hapticFeedback.vibrate();
     setState(() {
-      _count++;
+      _counter++;
     });
   }
 
   void _resetCounter() {
-    _hapticFeedback.vibrate();
     setState(() {
-      _count = 0;
+      _counter = 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          color: Colors.black,
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Align(
-                alignment: Alignment.topRight,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey,
-                    foregroundColor: Colors.white,
-                    shape: const CircleBorder(),
-                    minimumSize: const Size(40, 40),
-                  ),
-                  onPressed: _resetCounter,
-                  child: const Text('Reset'),
+      backgroundColor: Colors.black,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  shape: const CircleBorder(),
+                  padding: const EdgeInsets.all(10),
+                ),
+                onPressed: _resetCounter,
+                child: const Text(
+                  'أعادة التصفير',
+                  style: TextStyle(fontSize: 12),
                 ),
               ),
             ),
-            const Expanded(child: SizedBox()),
-            Text(
-              '$_count',
-              style: const TextStyle(fontSize: 64, color: Colors.white),
+          ),
+          Expanded(
+            child: Center(
+              child: Text(
+                '$_counter',
+                style: const TextStyle(fontSize: 64, color: Colors.white),
+              ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7A288A), // Purple
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.purple,
                 shape: const CircleBorder(),
-                minimumSize: const Size(100, 100),
+                padding: const EdgeInsets.all(20),
               ),
               onPressed: _incrementCounter,
-              child: const Text('سبّح', style: TextStyle(fontSize: 24)),
+              child: const Text(
+                'سبّح',
+                style: TextStyle(fontSize: 24),
+              ),
             ),
-            const Expanded(child: SizedBox()),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
