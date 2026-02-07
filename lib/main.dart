@@ -10,7 +10,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'Setup',
       home: MyHomePage(),
     );
   }
@@ -28,10 +27,10 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Setup'),
+        title: const Text('Flutter 3.19'),
       ),
       body: const Center(
-        child: Text('Setup complete'),
+        child: Text('Welcome to Flutter 3.19'),
       ),
     );
   }
