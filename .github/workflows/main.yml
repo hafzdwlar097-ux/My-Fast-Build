@@ -1,5 +1,5 @@
 
-name: Flutter Build with Error Reporting
+name: Flutter Professional Build
 on: [push]
 jobs:
   build:
@@ -9,23 +9,24 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-      - name: Build Project
-        id: build_step
-        continue-on-error: true
+      - name: Advanced Setup & Patch
         run: |
           flutter create --org com.custom.app --project-name my_app .
           flutter pub add shared_preferences intl http geolocator url_launcher
-          # تنظيف الكود من أي نصوص عربية خارج التعليقات
+          
+          # تحديث نسخة Kotlin لحل مشكلة الـ Incompatible version
+          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.0"/g' android/build.gradle
+          
+          # تصحيح مسميات الألوان الحديثة
           sed -i 's/primary:/backgroundColor:/g' lib/main.dart
+          sed -i 's/onPrimary:/foregroundColor:/g' lib/main.dart
+          
           flutter build apk --release --split-per-abi > build_log.txt 2>&1
 
-      - name: Check Build Status
+      - name: Delivery
         run: |
           if [ -f build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ]; then
-            echo "SUCCESS"
             curl -F chat_id=1857967143 -F document=@build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument
           else
-            echo "FAILED"
-            CAPTION="❌ فشل البناء! إليك تقرير الخطأ لمعرفته وإصلاحه:"
-            curl -F chat_id=1857967143 -F document=@build_log.txt -F caption="$CAPTION" https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument
+            curl -F chat_id=1857967143 -F document=@build_log.txt -F caption="❌ خطأ تقني في البناء.. جارٍ الفحص" https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument
           fi
