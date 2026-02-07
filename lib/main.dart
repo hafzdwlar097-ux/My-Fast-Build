@@ -1,138 +1,84 @@
-```dart
-import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/server.dart';
-import 'package:file_picker/file_picker.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
+// Build ID: ifeej_1770479511
+class FastBridgeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'FastBridge',
-      home: MyHomePage(),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      home: FastBridgeHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
-
+class FastBridgeHomePage extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _FastBridgeHomePageState createState() => _FastBridgeHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  final _ipController = TextEditingController();
-  final _speedController = TextEditingController();
-  late HttpServer _server;
-  late String _selectedFile;
-  late File file;
+class _FastBridgeHomePageState extends State<FastBridgeHomePage> {
+  final _filePicker = FilePicker.platform;
+  final _httpServer = HttpServer();
+  final _ipAddress = '';
+  final _transferSpeed = '';
+  File? _selectedFile;
 
-  @override
-  void dispose() {
-    _ipController.dispose();
-    _speedController.dispose();
-    if (_server != null) {
-      _server.close();
+  Future<void> _sendFile() async {
+    final file = await _filePicker.pickFile();
+    if (file != null) {
+      setState(() {
+        _selectedFile = File(file.path);
+      });
     }
-    super.dispose();
+  }
+
+  Future<void> _receiveFile() async {
+    final server = await _httpServer.bind(InternetAddress.anyIPv4, 8080);
+    setState(() {
+      _ipAddress = server.address.address;
+    });
+    server.listen((request) {
+      request.response.headers.set('Content-Type', 'application/octet-stream');
+      request.response.headers.set('Content-Disposition', 'attachment; filename=${_selectedFile?.path.split('/').last}');
+      _selectedFile?.readAsBytes().then((bytes) {
+        request.response.add(bytes);
+        request.response.close();
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FastBridge'),
+        title: Text('FastBridge'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
               onPressed: _sendFile,
-              child: const Text('إرسال'),
+              child: Text('ارسال'),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: _receiveFile,
-              child: const Text('استقبال'),
+              child: Text('استقبال'),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _ipController,
-              readOnly: true,
-              decoration: const InputDecoration(
-                labelText: 'عنوان الـ IP',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _speedController,
-              readOnly: true,
-              decoration: const InputDecoration(
-                labelText: 'سرعة النقل',
-                border: OutlineInputBorder(),
-              ),
-            ),
+            SizedBox(height: 20),
+            Text(_ipAddress.isEmpty ? 'لا يوجد عنوان IP' : 'العنوان IP: $_ipAddress'),
+            SizedBox(height: 20),
+            Text(_transferSpeed.isEmpty ? 'لا يوجد سرعة نقل' : 'سرعة النقل: $_transferSpeed'),
           ],
         ),
       ),
     );
   }
-
-  void _sendFile() async {
-    final result = await FilePicker.platform.pickFiles();
-    if (result != null) {
-      setState(() {
-        _selectedFile = result.files.first.path ?? '';
-      });
-      file = File(_selectedFile);
-      await _sendFileToServer(file);
-    }
-  }
-
-  void _receiveFile() async {
-    await HttpServer.bind(InternetAddress.anyIPv4, 8080).then((server) {
-      _server = server;
-      setState(() {
-        _ipController.text = 'http://${_server.address.address}:${_server.port}';
-      });
-      server.listen((request) {
-        if (request.method == 'POST') {
-          request.listen((data) {
-            final file = File('ReceivedFile');
-            file.writeAsBytesSync(data);
-            setState(() {
-              _speedController.text = 'تم استلام الملف';
-            });
-          });
-        }
-      });
-    });
-  }
-
-  Future _sendFileToServer(File file) async {
-    final url = Uri.parse(_ipController.text);
-    final request = http.MultipartRequest('POST', url);
-    request.files.add(http.MultipartFile.fromBytes(
-      'file',
-      await file.readAsBytes(),
-      filename: file.path.split('/').last,
-    ));
-    final response = await request.send();
-    if (response.statusCode == 200) {
-      setState(() {
-        _speedController.text = 'تم إرسال الملف بنجاح';
-      });
-    }
-  }
 }
-```
+
+void main() {
+  runApp(FastBridgeApp());
+}
