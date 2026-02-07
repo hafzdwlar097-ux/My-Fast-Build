@@ -1,5 +1,5 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -8,34 +8,38 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  @Override
+  @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: TasbeehScreen(),
+    return MaterialApp(
+      title: 'سبحة إلكترونية',
+      theme: ThemeData(
+        useMaterial3: true,
+        backgroundColor: Colors.black,
+      ),
+      home: const MyHomePage(),
     );
   }
 }
 
-class TasbeehScreen extends StatefulWidget {
-  const TasbeehScreen({Key? key}) : super(key: key);
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
-  State<TasbeehScreen> createState() => _TasbeehScreenState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _TasbeehScreenState extends State<TasbeehScreen> {
-  int _count = 0;
+class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 0;
 
-  void _reset() {
+  void _incrementCounter() {
     setState(() {
-      _count = 0;
+      _counter++;
     });
   }
 
-  void _increment() {
-    HapticFeedback.lightImpact();
+  void _resetCounter() {
     setState(() {
-      _count++;
+      _counter = 0;
     });
   }
 
@@ -43,45 +47,43 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
+      body: Stack(
         children: [
-          Align(
-            alignment: Alignment.topRight,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: CircleAvatar(
-                backgroundColor: Colors.grey,
-                child: IconButton(
-                  icon: const Icon(Icons.restart_alt, color: Colors.white),
-                  onPressed: _reset,
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _counter.toString(),
+                  style: const TextStyle(
+                    fontSize: 64,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.purple),
+                    shape: MaterialStateProperty.all(const CircleBorder()),
+                    padding: MaterialStateProperty.all(const EdgeInsets.all(20)),
+                    minimumSize: MaterialStateProperty.all(const Size(100, 100)),
+                  ),
+                  onPressed: _incrementCounter,
+                  child: const Text(
+                    'سبّح',
+                    style: TextStyle(fontSize: 24),
+                  ),
+                ),
+              ],
             ),
           ),
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _count.toString(),
-                    style: const TextStyle(fontSize: 64, color: Colors.white),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: const Color(0xFF800080), // أرجواني
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(24),
-                    ),
-                    onPressed: _increment,
-                    child: const Text(
-                      'سبّح',
-                      style: TextStyle(fontSize: 24),
-                    ),
-                  ),
-                ],
-              ),
+          Positioned(
+            top: 20,
+            right: 20,
+            child: IconButton(
+              icon: const Icon(Icons.restart_alt),
+              color: Colors.white,
+              onPressed: _resetCounter,
             ),
           ),
         ],
