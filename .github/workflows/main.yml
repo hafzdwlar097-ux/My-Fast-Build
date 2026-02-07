@@ -1,5 +1,5 @@
 
-name: Flutter Build
+name: Flutter Build Release
 on: [push]
 jobs:
   build:
