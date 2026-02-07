@@ -1,5 +1,5 @@
 
-name: Flutter Full App Build
+name: Flutter Radar Build
 on: [push]
 jobs:
   build:
@@ -11,11 +11,10 @@ jobs:
           flutter-version: '3.19.0'
       - name: Build
         run: |
-          flutter create --org com.app --project-name full_manager_app .
-          flutter pub add shared_preferences
-          # إصلاح مسميات الألوان الحديثة تلقائياً
-          sed -i 's/primary:/backgroundColor:/g' lib/main.dart
-          sed -i 's/onPrimary:/foregroundColor:/g' lib/main.dart
+          flutter create --org com.app --project-name radar_app .
+          flutter pub add geolocator url_launcher
+          # إضافة صلاحيات الموقع في ملف الـ AndroidManifest
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' android/app/src/main/AndroidManifest.xml
           flutter build apk --release --split-per-abi
       - name: Send
         run: |
