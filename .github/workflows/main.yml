@@ -1,5 +1,5 @@
 
-name: Flutter Build
+name: Final Build Fix
 on: [push]
 jobs:
   build:
@@ -11,7 +11,7 @@ jobs:
           flutter-version: '3.19.0'
       - name: Build
         run: |
-          flutter create --org com.app --project-name fast_build_app .
+          flutter create --org com.app --project-name fast_app .
           flutter build apk --debug
       - name: Send
         run: |
