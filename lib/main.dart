@@ -1,4 +1,3 @@
-```dart
 import 'package:flutter/material.dart';
 
 void main() {
@@ -10,8 +9,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MyHomePage(),
+    return MaterialApp(
+      title: 'Counter App',
+      theme: ThemeData(
+        primarySwatch: Colors.red,
+      ),
+      home: const MyHomePage(),
     );
   }
 }
@@ -24,40 +27,55 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _text = 'أهلاً بك يا إبراهيم';
+  int _counter = 0;
 
-  void _changeText() {
+  void _incrementCounter() {
     setState(() {
-      _text = 'تمت التجربة بنجاح';
+      _counter++;
+    });
+  }
+
+  void _decrementCounter() {
+    setState(() {
+      _counter--;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: Colors.blue,
+      appBar: AppBar(
+        title: const Text('Counter App'),
+      ),
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _text,
-              style: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+          children: <Widget>[
+            const Text(
+              'You have pushed the button this many times:',
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.yellow,
-              ),
-              onPressed: _changeText,
-              child: const Text('اضغط هنا'),
+            Text(
+              '$_counter',
+              style: const TextStyle(fontSize: 40, color: Colors.red),
             ),
           ],
         ),
       ),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          FloatingActionButton(
+            onPressed: _decrementCounter,
+            tooltip: 'Decrement',
+            child: const Icon(Icons.remove),
+          ),
+          FloatingActionButton(
+            onPressed: _incrementCounter,
+            tooltip: 'Increment',
+            child: const Icon(Icons.add),
+          ),
+        ],
+      ),
     );
   }
 }
-```
