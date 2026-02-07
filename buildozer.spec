@@ -1,7 +1,7 @@
 
 [app]
-title = Gemini2App
-package.name = gemini2app
+title = Gemini2Fixed
+package.name = gemini2fixed
 package.domain = org.test
 source.dir = .
 version = 1.0.0
@@ -11,5 +11,4 @@ android.archs = arm64-v8a, armeabi-v7a
 android.api = 34
 android.minapi = 21
 android.accept_sdk_license = True
-p4a.branch = master
 log_level = 2
