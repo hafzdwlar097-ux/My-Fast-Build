@@ -1,0 +1,30 @@
+name: Flutter Build
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+
+      - name: Clean AI Code
+        run: |
+          # حذف أي سطر فيه علامات الماركدوان
+          sed -i '/```/d' lib/main.dart
+          # حذف كلمة dart لو جات لوحدها في سطر
+          sed -i '/^dart$/d' lib/main.dart
+          # تنظيف السطور الفارغة في أول الملف
+          sed -i '1{/^$/d}' lib/main.dart
+
+      - name: Build APK
+        run: flutter build apk --debug
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: App-Debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
