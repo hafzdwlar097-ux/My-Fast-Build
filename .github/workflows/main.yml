@@ -10,16 +10,17 @@ jobs:
         with:
           flutter-version: '3.19.0'
       
-      - name: 🔥 Deep Clean & Force Rebuild
+      - name: 🔥 Deep Clean & Force Fresh Structure
         run: |
-          # تنظيف شامل للمخلفات القديمة
+          # تنظيف كامل للمخلفات
           flutter clean
           rm -rf build
           
-          # إعادة إنشاء الهيكل لضمان وجود المانيفست الجديد
-          flutter create --org com.ibrahim.new --project-name fast_bridge_app . --overwrite
+          # إعادة إنشاء الهيكل باسم حزمة صحيح (com.ibrahim.fastbridge)
+          # لاحظ شلنا كلمة new عشان ميعملش Error جافا
+          flutter create --org com.ibrahim.fastbridge --project-name fastbridge_app . --overwrite
           
-          # تحميل المكتبات من الصفر (ضروري لتغيير الكود)
+          # تحميل المكتبات من الصفر
           flutter pub get
 
       - name: 🏗️ Build Fresh APK
@@ -29,5 +30,5 @@ jobs:
         run: |
           curl -F "chat_id=1857967143" \
                -F "document=@build/app/outputs/flutter-apk/app-release.apk" \
-               -F "caption=🎯 المهمة نجحت! تم تدمير العداد وبناء تطبيقك الجديد." \
+               -F "caption=🎯 تم التعديل والنجاح! ده تطبيق FastBridge الحقيقي." \
                "https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument"
