@@ -4,181 +4,176 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 void main() {
-  runApp(const MyApp());
+    runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+    const MyApp({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Habit Tracker',
-      theme: ThemeData(
-        useMaterial3: true,
-        backgroundColor: const Color(0xFF000000),
-        cardColor: const Color(0xFF333333),
-        cardTheme: const CardTheme(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(16)),
-          ),
-        ),
-      ),
-      home: const HabitTracker(),
-    );
-  }
-}
-
-class HabitTracker extends StatefulWidget {
-  const HabitTracker({super.key});
-
-  @override
-  State<HabitTracker> createState() => _HabitTrackerState();
-}
-
-class _HabitTrackerState extends State<HabitTracker> {
-  final List<Habit> _habits = [];
-  final _habitController = TextEditingController();
-
-  void _addHabit() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (_habitController.text.isNotEmpty) {
-      final habit = Habit(
-        title: _habitController.text,
-        isCompleted: false,
-        frequency: 0,
-      );
-      setState(() {
-        _habits.add(habit);
-        _habitController.clear();
-      });
-      await prefs.setString('habits', jsonEncode(_habits.map((habit) => habit.toJson()).toList()));
-    }
-  }
-
-  void _toggleHabit(int index) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _habits[index].isCompleted = !_habits[index].isCompleted;
-      if (_habits[index].isCompleted) {
-        _habits[index].frequency++;
-      }
-    });
-    await prefs.setString('habits', jsonEncode(_habits.map((habit) => habit.toJson()).toList()));
-  }
-
-  void _removeHabit(int index) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _habits.removeAt(index);
-    });
-    await prefs.setString('habits', jsonEncode(_habits.map((habit) => habit.toJson()).toList()));
-  }
-
-  void _loadHabits() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? habitsJson = prefs.getString('habits');
-    if (habitsJson != null) {
-      final List<Habit> habits = jsonDecode(habitsJson).map((habitJson) => Habit.fromJson(habitJson)).toList();
-      setState(() {
-        _habits.addAll(habits);
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadHabits();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Habit Tracker'),
-      ),
-      body: Container(
-        color: const Color(0xFF000000),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: TextField(
-                controller: _habitController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Add Habit',
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: _addHabit,
-              child: const Text('Add'),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _habits.isEmpty
-                  ? const Center(
-                      child: Text('No habits added'),
-                    )
-                  : ListView.builder(
-                      itemCount: _habits.length,
-                      itemBuilder: (context, index) {
-                        return Card(
-                          child: ListTile(
-                            title: Text(_habits[index].title),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Checkbox(
-                                  value: _habits[index].isCompleted,
-                                  onChanged: (value) => _toggleHabit(index),
-                                ),
-                                Text('Completed ${_habits[index].frequency} times'),
-                                IconButton(
-                                  icon: const Icon(Icons.delete),
-                                  onPressed: () => _removeHabit(index),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+    @override
+    Widget build(BuildContext context) {
+        return MaterialApp(
+            title: 'Habit Tracker',
+            theme: ThemeData(
+                scaffoldBackgroundColor: const Color(0xFF000000),
+                cardColor: const Color(0xFF333333),
+                textTheme: const TextTheme(
+                    headline1: TextStyle(
+                        color: Color(0xFFFFFFFF),
+                        fontSize: 24,
                     ),
+                    headline2: TextStyle(
+                        color: Color(0xFFFFFFFF),
+                        fontSize: 18,
+                    ),
+                ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
+            home: const MyHomePage(),
+        );
+    }
+}
+
+class MyHomePage extends StatefulWidget {
+    const MyHomePage({super.key});
+
+    @override
+    State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+    final List<Habit> _habits = [];
+    final _textController = TextEditingController();
+
+    Future<void> _saveHabits() async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('habits', jsonEncode(_habits));
+    }
+
+    Future<void> _loadHabits() async {
+        final prefs = await SharedPreferences.getInstance();
+        final habitsString = prefs.getString('habits');
+        if (habitsString != null) {
+            final List<Map<String, dynamic>> habitsMap = jsonDecode(habitsString);
+            setState(() {
+                _habits.addAll(habitsMap.map((habit) => Habit(
+                    habit['name'],
+                    habit['done'],
+                )).toList());
+            });
+        }
+    }
+
+    @override
+    void initState() {
+        super.initState();
+        _loadHabits();
+    }
+
+    void _addHabit() {
+        setState(() {
+            _habits.add(Habit(_textController.text, false));
+            _saveHabits();
+            _textController.clear();
+        });
+    }
+
+    void _toggleHabit(int index) {
+        setState(() {
+            _habits[index].done = !_habits[index].done;
+            _saveHabits();
+        });
+    }
+
+    void _removeHabit(int index) {
+        setState(() {
+            _habits.removeAt(index);
+            _saveHabits();
+        });
+    }
+
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text('Habit Tracker'),
+            ),
+            body: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                    children: [
+                        Row(
+                            children: [
+                                Expanded(
+                                    child: TextField(
+                                        controller: _textController,
+                                        style: const TextStyle(
+                                            color: Color(0xFFFFFFFF),
+                                        ),
+                                        decoration: const InputDecoration(
+                                            border: OutlineInputBorder(),
+                                            hintStyle: TextStyle(
+                                                color: Color(0xFFFFFFFF),
+                                            ),
+                                            hintText: 'New Habit',
+                                        ),
+                                    ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                    onPressed: _addHabit,
+                                    child: const Text('Add'),
+                                ),
+                            ],
+                        ),
+                        const SizedBox(height: 16),
+                        Expanded(
+                            child: _habits.isEmpty
+                                ? const Center(
+                                    child: Text('No Habits Added'),
+                                )
+                                : ListView.builder(
+                                    itemCount: _habits.length,
+                                    itemBuilder: (context, index) {
+                                        return Card(
+                                            child: ListTile(
+                                                leading: Checkbox(
+                                                    value: _habits[index].done,
+                                                    onChanged: (value) {
+                                                        _toggleHabit(index);
+                                                    },
+                                                ),
+                                                title: Text(
+                                                    _habits[index].name,
+                                                ),
+                                                trailing: IconButton(
+                                                    icon: const Icon(Icons.delete),
+                                                    onPressed: () {
+                                                        _removeHabit(index);
+                                                    },
+                                                ),
+                                            ),
+                                        );
+                                    },
+                                ),
+                        ),
+                    ],
+                ),
+            ),
+        );
+    }
 }
 
 class Habit {
-  String title;
-  bool isCompleted;
-  int frequency;
+    final String name;
+    bool done;
 
-  Habit({
-    required this.title,
-    this.isCompleted = false,
-    this.frequency = 0,
-  });
+    Habit(this.name, this.done);
 
-  factory Habit.fromJson(Map<String, dynamic> json) {
-    return Habit(
-      title: json['title'],
-      isCompleted: json['isCompleted'],
-      frequency: json['frequency'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'isCompleted': isCompleted,
-      'frequency': frequency,
-    };
-  }
+    Map<String, dynamic> toJson() {
+        return {
+            'name': name,
+            'done': done,
+        };
+    }
 }
 ```
