@@ -2,21 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key}) : super(key: key);
+
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -39,37 +43,48 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              '$_counter',
-              style: TextStyle(fontSize: 64, color: Colors.white),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.purple,
+                  shape: const CircleBorder(),
+                  padding: const EdgeInsets.all(8.0),
+                ),
+                onPressed: _resetCounter,
+                child: const Text(
+                  'Reset',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.purple),
-                shape: MaterialStateProperty.all(CircleBorder()),
-                padding: MaterialStateProperty.all(EdgeInsets.all(20)),
+          ),
+          Expanded(
+            child: Center(
+              child: Text(
+                _counter.toString(),
+                style: const TextStyle(fontSize: 64, color: Colors.white),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: Colors.purple,
+                shape: const CircleBorder(),
+                padding: const EdgeInsets.all(16.0),
               ),
               onPressed: _incrementCounter,
-              child: Text(
+              child: const Text(
                 'سبّح',
-                style: TextStyle(fontSize: 24, color: Colors.white),
+                style: TextStyle(fontSize: 24),
               ),
             ),
-          ],
-        ),
-      ),
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.restore, color: Colors.white),
-            onPressed: _resetCounter,
           ),
         ],
       ),
