@@ -1,6 +1,4 @@
-لسننا نستخدم Vibrations أو HapticFeedback. 
-
-import 'dart:math';
+import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +10,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'مسبحة إلكترونية',
       home: MyHomePage(),
     );
   }
@@ -26,70 +23,97 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  Color _backgroundColor = Colors.white;
+  Color _colorName = Colors.black;
+  String _colorText = 'WHITE';
+  bool _showResetIcon = false;
 
-  void _incrementCounter() {
+  void _changeBackgroundColor() {
     setState(() {
-      _counter++;
+      _backgroundColor = Color.fromRGBO(
+        _randomNumber(255),
+        _randomNumber(255),
+        _randomNumber(255),
+        1,
+      );
+      _colorName = _getTextColor(_backgroundColor);
+      _colorText = _getEnglishColorName(_backgroundColor);
     });
   }
 
-  void _resetCounter() {
+  void _showResetIconOnLongPress() {
     setState(() {
-      _counter = 0;
+      _showResetIcon = true;
     });
+  }
+
+  void _resetBackgroundColor() {
+    setState(() {
+      _backgroundColor = Colors.white;
+      _colorName = Colors.black;
+      _colorText = 'WHITE';
+      _showResetIcon = false;
+    });
+  }
+
+  int _randomNumber(int max) {
+    return Random().nextInt(max);
+  }
+
+  Color _getTextColor(Color backgroundColor) {
+    return ThemeData.estimateBrightnessForColor(backgroundColor) == Brightness.light
+        ? Colors.black
+        : Colors.white;
+  }
+
+  String _getEnglishColorName(Color color) {
+    if (color == Colors.white) return 'WHITE';
+    if (color == Colors.black) return 'BLACK';
+    if (color == Colors.red) return 'RED';
+    if (color == Colors.green) return 'GREEN';
+    if (color == Colors.blue) return 'BLUE';
+    if (color == Colors.yellow) return 'YELLOW';
+    if (color == Colors.purple) return 'PURPLE';
+    if (color == Colors.orange) return 'ORANGE';
+    if (color == Colors.pink) return 'PINK';
+    if (color == Colors.brown) return 'BROWN';
+    if (color == Colors.grey) return 'GREY';
+    return 'CUSTOM';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  shape: const CircleBorder(),
-                  minimumSize: const Size(40, 40),
-                ),
-                onPressed: _resetCounter,
-                child: const Text(
-                  'Reset',
-                  style: TextStyle(fontSize: 12),
+    return GestureDetector(
+      onTap: _changeBackgroundColor,
+      onLongPress: _showResetIconOnLongPress,
+      child: Container(
+        color: _backgroundColor,
+        child: Stack(
+          children: [
+            Center(
+              child: Text(
+                _colorText,
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                  color: _colorName,
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _counter.toString(),
-                    style: const TextStyle(fontSize: 64, color: Colors.white),
+            if (_showResetIcon)
+              Positioned(
+                top: 20,
+                right: 20,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.reset_tv,
+                    color: Colors.white,
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      shape: const CircleBorder(),
-                      minimumSize: const Size(120, 120),
-                    ),
-                    onPressed: _incrementCounter,
-                    child: const Text(
-                      'سبّح',
-                      style: TextStyle(fontSize: 24),
-                    ),
-                  ),
-                ],
+                  onPressed: _resetBackgroundColor,
+                ),
               ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
