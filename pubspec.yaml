@@ -1,8 +1,8 @@
 
-name: app_mmdddz
-description: Smart Build nthgm
+name: app_aysenq
+description: Unique Build aysenq
 publish_to: 'none'
-version: 1.0.0+1
+version: 2.7.8
 environment:
   sdk: '>=3.0.0 <4.0.0'
 dependencies:
