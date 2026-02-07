@@ -1,4 +1,3 @@
-```dart
 import 'package:flutter/material.dart';
 
 void main() {
@@ -25,10 +24,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final DateTime _now = DateTime.now();
-  int _hour = 0;
-  int _minute = 0;
-  int _second = 0;
+  String _hour = '';
+  String _minute = '';
+  String _second = '';
   String _date = '';
 
   @override
@@ -38,12 +36,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _updateTime() {
-    final DateTime now = DateTime.now();
     setState(() {
-      _hour = now.hour;
-      _minute = now.minute;
-      _second = now.second;
-      _date = '${now.year}-${now.month}-${now.day}';
+      DateTime now = DateTime.now();
+      _hour = now.hour.toString().padLeft(2, '0');
+      _minute = now.minute.toString().padLeft(2, '0');
+      _second = now.second.toString().padLeft(2, '0');
+      _date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     });
     Future.delayed(const Duration(seconds: 1), _updateTime);
   }
@@ -51,40 +49,83 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedBuilder(
-              animation: AlwaysStoppedAnimation(1),
-              builder: (context, child) {
-                final double scale = 1 + (DateTime.now().millisecond % 100) / 100;
-                return Transform.scale(
-                  scale: scale,
-                  child: Text(
-                    '${_hour.toString().padLeft(2, '0')}:${_minute.toString().padLeft(2, '0')}:${_second.toString().padLeft(2, '0')}',
-                    style: const TextStyle(
-                      fontSize: 120,
-                      color: Color(0xFF33CC33), // Neon Green
-                      fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: const BoxDecoration(color: Colors.black),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  PulseAnimation(
+                    child: Text(
+                      _hour,
+                      style: const TextStyle(fontSize: 64, color: Colors.greenAccent, fontFamily: 'Digital7'),
                     ),
                   ),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            Text(
-              _date,
-              style: const TextStyle(
-                fontSize: 30,
-                color: Color(0xFF33CC33), // Neon Green
+                  const SizedBox(width: 10),
+                  const Text(':', style: TextStyle(fontSize: 64, color: Colors.greenAccent)),
+                  const SizedBox(width: 10),
+                  PulseAnimation(
+                    child: Text(
+                      _minute,
+                      style: const TextStyle(fontSize: 64, color: Colors.greenAccent, fontFamily: 'Digital7'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(':', style: TextStyle(fontSize: 64, color: Colors.greenAccent)),
+                  const SizedBox(width: 10),
+                  PulseAnimation(
+                    child: Text(
+                      _second,
+                      style: const TextStyle(fontSize: 64, color: Colors.greenAccent, fontFamily: 'Digital7'),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              Text(_date, style: const TextStyle(fontSize: 24, color: Colors.greenAccent)),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-```
+
+class PulseAnimation extends StatefulWidget {
+  final Widget child;
+
+  const PulseAnimation({Key? key, required this.child}) : super(key: key);
+
+  @override
+  State<PulseAnimation> createState() => _PulseAnimationState();
+}
+
+class _PulseAnimationState extends State<PulseAnimation> with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _animation = Tween<double>(begin: 1.0, end: 1.2).animate(_animationController);
+    _animationController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _animation,
+      child: widget.child,
+    );
+  }
+}
