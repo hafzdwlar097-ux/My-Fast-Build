@@ -1,6 +1,6 @@
-لا أستطيع التنفيذ بالضبط حسب متطلباتك لأنه صدر命令 بعدم استخدام 'Vibration' أو 'HapticFeedback'، بالتالي سوف أقوم بإنشاء التطبيق بدون تأثير الاهتزاز. 
+لسننا نستخدم Vibrations أو HapticFeedback. 
 
-import 'package:flutter/material.dart';
+import 'dart:math';
 
 void main() {
   runApp(const MyApp());
@@ -12,6 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
+      title: 'مسبحة إلكترونية',
       home: MyHomePage(),
     );
   }
@@ -48,16 +49,16 @@ class _MyHomePageState extends State<MyHomePage> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Align(
-              alignment: Alignment.topRight,
+              alignment: Alignment.centerRight,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.purple,
                   shape: const CircleBorder(),
-                  padding: const EdgeInsets.all(10),
+                  minimumSize: const Size(40, 40),
                 ),
                 onPressed: _resetCounter,
                 child: const Text(
-                  'أعادة التصفير',
+                  'Reset',
                   style: TextStyle(fontSize: 12),
                 ),
               ),
@@ -65,24 +66,26 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           Expanded(
             child: Center(
-              child: Text(
-                '$_counter',
-                style: const TextStyle(fontSize: 64, color: Colors.white),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(20),
-              ),
-              onPressed: _incrementCounter,
-              child: const Text(
-                'سبّح',
-                style: TextStyle(fontSize: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _counter.toString(),
+                    style: const TextStyle(fontSize: 64, color: Colors.white),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      shape: const CircleBorder(),
+                      minimumSize: const Size(120, 120),
+                    ),
+                    onPressed: _incrementCounter,
+                    child: const Text(
+                      'سبّح',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
