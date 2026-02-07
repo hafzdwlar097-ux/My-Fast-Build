@@ -1,99 +1,93 @@
+للمساعدة في بناء تطبيق رادار جی پی اس بتصميم نیون المستقبلی باستخدام Flutter، أود أن أقدم أمثلة على كيفية استخدام بسته 'geolocator' لقراءة الموقع الجغرافي وإظهار الإحداثيات و пакة 'url_launcher' لإرسال الموقع الجغرافي عبر الرسائل القصيرة. في الأسفل، سأقدم خطوات لإنشاء التطبيق:
+
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'مدير المهام والديون',
-      theme: ThemeData(
-        primarySwatch: Colors.grey,
-        brightness: Brightness.dark,
-      ),
-      home: LoginScreen(),
+    return const MaterialApp(
+      home: RadarPage(),
     );
   }
 }
 
-class LoginScreen extends StatefulWidget {
+class RadarPage extends StatefulWidget {
+  const RadarPage({Key? key}) : super(key: key);
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<RadarPage> createState() => _RadarPageState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
+class _RadarPageState extends State<RadarPage> {
+  String _ latitude = '';
+  String _longitude = '';
+  String _speed = '';
 
-  void _login() async {
-    if (_usernameController.text == 'admin' && _passwordController.text == '123') {
-      await _saveLoginStatus(true);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
+  void _getCurrentLocation() async {
+    final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    setState(() {
+      _latitude = position.latitude.toString();
+      _longitude = position.longitude.toString();
+      _speed = position.speed.toString();
+    });
+  }
+
+  void _sendLocationViaSms() async {
+    final url = 'sms:?body=موقعي الحالي: lat: $_latitude, long: $_longitude';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
     } else {
-      _showErrorDialog('اسم المستخدم أو كلمة المرور غير صحيحة');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Failed to send location'),
+      ));
     }
-  }
-
-  Future<void> _saveLoginStatus(bool isLoggedIn) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', isLoggedIn);
-  }
-
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('خطأ'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            child: Text('موافق'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('مدير المهام والديون'),
+        title: const Text('رادار جی پی اس'),
+        backgroundColor: Colors.purpleAccent,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+      body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                labelText: 'اسم المستخدم',
-                border: OutlineInputBorder(),
-              ),
+            Text(
+              'الإحداثيات: lat: $_latitude, long: $_longitude',
+              style: const TextStyle(fontSize: 18, color: Colors.pink),
             ),
-            SizedBox(height: 20),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'كلمة المرور',
-                border: OutlineInputBorder(),
-              ),
+            Text(
+              'السرعة: $_speed',
+              style: const TextStyle(fontSize: 18, color: Colors.pink),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
-              child: Text('دخول'),
-              onPressed: _login,
+              style: ElevatedButton.styleFrom(
+                primary: Colors.purpleAccent,
+                shape: const StadiumBorder(),
+              ),
+              onPressed: _getCurrentLocation,
+              child: const Text('تحديث الموقع'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: Colors.purpleAccent,
+                shape: const StadiumBorder(),
+              ),
+              onPressed: _sendLocationViaSms,
+              child: const Text('أرسل الموقع عبر الرسائل القصيرة'),
             ),
           ],
         ),
@@ -102,153 +96,22 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class HomeScreen extends StatefulWidget {
-  @override
-  _HomeScreenState createState() => _HomeScreenState();
-}
+**خطوات الإعداد:**
 
-class _HomeScreenState extends State<HomeScreen> {
-  final _taskController = TextEditingController();
-  final _moneyController = TextEditingController();
-  List<String> _tasks = [];
-  List<String> _money = [];
+1. أضف باقات 'geolocator' و 'url_launcher' إلى ملف `pubspec.yaml` في مشروعك.
+dependencies:
+  flutter:
+    sdk: flutter
+  geolocator: ^10.0.1
+  url_launcher: ^6.1.5
+2. استخدم الأمر `flutter pub get` لتحميل الباقات.
+3. أضف الكود أعلاه إلى ملف `main.dart` في مشروعك.
 
-  void _addTask() async {
-    if (_taskController.text.isNotEmpty) {
-      setState(() {
-        _tasks.add(_taskController.text);
-      });
-      await _saveTasks(_tasks);
-      _taskController.clear();
-    }
-  }
+**ملاحظات:**
 
-  void _addMoney() async {
-    if (_moneyController.text.isNotEmpty) {
-      setState(() {
-        _money.add(_moneyController.text);
-      });
-      await _saveMoney(_money);
-      _moneyController.clear();
-    }
-  }
+* يجب أن تثبت أن تطلب الإمكانية الوصول إلى الموقع الجغرافي في الهاتف الذكي الخاص بك باستخدام `geolocator`.
+* يُطلب من المستخدم الإذن بالوصول إلى الموقع الجغرافي عند تشغيل التطبيق.
+* يمكن تعديل الرسالة النصية التي تُرسل عند الضغط على زر "أرسل الموقع عبر الرسائل القصيرة" لتضم الإحداثيات و السرعة.
+* للتطبيق الواقعي، يجب أن تكون هناك خطوات أمان لضمان أن التطبيق لا يرسل الموقع الجغرافي بشكل غير مرغوب فيه.
 
-  Future<void> _saveTasks(List<String> tasks) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('tasks', tasks);
-  }
-
-  Future<void> _saveMoney(List<String> money) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('money', money);
-  }
-
-  Future<void> _loadTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-    final tasks = prefs.getStringList('tasks');
-    if (tasks != null) {
-      setState(() {
-        _tasks = tasks;
-      });
-    }
-  }
-
-  Future<void> _loadMoney() async {
-    final prefs = await SharedPreferences.getInstance();
-    final money = prefs.getStringList('money');
-    if (money != null) {
-      setState(() {
-        _money = money;
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTasks();
-    _loadMoney();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('مدير المهام والديون'),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: 'المهام'),
-              Tab(text: 'الديون المالية'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _taskController,
-                    decoration: InputDecoration(
-                      labelText: 'مهمة جديدة',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    child: Text('إضافة مهمة'),
-                    onPressed: _addTask,
-                  ),
-                  SizedBox(height: 20),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _tasks.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(_tasks[index]),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _moneyController,
-                    decoration: InputDecoration(
-                      labelText: 'دين مالي',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    child: Text('إضافة دين مالي'),
-                    onPressed: _addMoney,
-                  ),
-                  SizedBox(height: 20),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _money.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(_money[index]),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+مع هذه الخطوات، يجب أن تكون قادراً على إنشاء تطبيق رادار جی پی اس بتصميم نیون مستقبلي باستخدام Flutter.
