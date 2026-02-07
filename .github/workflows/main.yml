@@ -1,27 +1,20 @@
-name: Ultimate Clean Build
+
+name: Multi-Build (Web & APK)
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4 # تحديث لـ v4
-      
+      - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: false # تعطيل التخزين المؤقت لضمان بناء جديد تماماً
-
-      - name: Force Clean Everything
-        run: |
-          flutter clean
-          rm -rf build
-          flutter pub get
-
-      - name: Build New APK
-        run: flutter build apk --release --no-tree-shake-icons
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4 # تحديث لـ v4 (يحل مشكلة الفشل)
+      - run: flutter pub get
+      - run: flutter build web
+      - run: flutter build apk --release --no-tree-shake-icons
+      - uses: actions/upload-artifact@v4
         with:
-          name: app-release-${{ github.run_number }}
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: Web-and-APK
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/web
