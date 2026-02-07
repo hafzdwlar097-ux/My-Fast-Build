@@ -1,5 +1,5 @@
 
-name: Flutter Build Release
+name: Flutter Full App Build
 on: [push]
 jobs:
   build:
@@ -9,14 +9,14 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-      - name: Project Setup
+      - name: Build
         run: |
-          flutter create --org com.app --project-name fast_app .
-          # تصحيح تلقائي للكود لو الـ AI استخدم كلمات قديمة
+          flutter create --org com.app --project-name full_manager_app .
+          flutter pub add shared_preferences
+          # إصلاح مسميات الألوان الحديثة تلقائياً
           sed -i 's/primary:/backgroundColor:/g' lib/main.dart
           sed -i 's/onPrimary:/foregroundColor:/g' lib/main.dart
-      - name: Build
-        run: flutter build apk --release --split-per-abi
+          flutter build apk --release --split-per-abi
       - name: Send
         run: |
           FILE="build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk"
