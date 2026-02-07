@@ -1,117 +1,296 @@
-للمساعدة في بناء تطبيق رادار جی پی اس بتصميم نیون المستقبلی باستخدام Flutter، أود أن أقدم أمثلة على كيفية استخدام بسته 'geolocator' لقراءة الموقع الجغرافي وإظهار الإحداثيات و пакة 'url_launcher' لإرسال الموقع الجغرافي عبر الرسائل القصيرة. في الأسفل، سأقدم خطوات لإنشاء التطبيق:
+يُرجى ملاحظة أن هذا الإجابة سوف تصنع تطبيق Flutter بسيط، إذا كنت تريد أكثر تعقيداً يجب عليك تقديم مزيد من التفاصيل.
+
+أيضاً يجب أن يكون لديك الحزمة shared_preferences مثبتة في مشروعك.
+
+إليك كيفية تنفيذ التطبيق:
+
+**ملف `pubspec.yaml`**
+
+name: store_app
+description: A new Flutter project.
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.17.1 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  shared_preferences: ^2.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+
+**ملف `main.dart`**
 
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:store_app/screens/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final isLoggedIn = prefs.getBool('isLoggedIn');
+  runApp(
+    MaterialApp(
+      title: 'متجر इलكتروني',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: isLoggedIn == true ? const HomeScreen() : const LoginScreen(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+**ملف `login_screen.dart`**
+
+import 'package:flutter/material.dart';
+import 'package:store_app/screens/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: RadarPage(),
-    );
-  }
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class RadarPage extends StatefulWidget {
-  const RadarPage({Key? key}) : super(key: key);
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
-  State<RadarPage> createState() => _RadarPageState();
-}
-
-class _RadarPageState extends State<RadarPage> {
-  String _ latitude = '';
-  String _longitude = '';
-  String _speed = '';
-
-  void _getCurrentLocation() async {
-    final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    setState(() {
-      _latitude = position.latitude.toString();
-      _longitude = position.longitude.toString();
-      _speed = position.speed.toString();
-    });
-  }
-
-  void _sendLocationViaSms() async {
-    final url = 'sms:?body=موقعي الحالي: lat: $_latitude, long: $_longitude';
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Failed to send location'),
-      ));
-    }
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('رادار جی پی اس'),
-        backgroundColor: Colors.purpleAccent,
+        title: const Text('تسجيل الدخول'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'الإحداثيات: lat: $_latitude, long: $_longitude',
-              style: const TextStyle(fontSize: 18, color: Colors.pink),
-            ),
-            Text(
-              'السرعة: $_speed',
-              style: const TextStyle(fontSize: 18, color: Colors.pink),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary: Colors.purpleAccent,
-                shape: const StadiumBorder(),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'البريد الإلكتروني',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'البريد الإلكتروني مطلوب';
+                  }
+                  return null;
+                },
               ),
-              onPressed: _getCurrentLocation,
-              child: const Text('تحديث الموقع'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary: Colors.purpleAccent,
-                shape: const StadiumBorder(),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'كلمة المرور',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'كلمة المرور مطلوبة';
+                  }
+                  return null;
+                },
               ),
-              onPressed: _sendLocationViaSms,
-              child: const Text('أرسل الموقع عبر الرسائل القصيرة'),
-            ),
-          ],
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate()) {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('isLoggedIn', true);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
+                    );
+                  }
+                },
+                child: const Text('تسجيل الدخول'),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-**خطوات الإعداد:**
+**ملف `home_screen.dart`**
 
-1. أضف باقات 'geolocator' و 'url_launcher' إلى ملف `pubspec.yaml` في مشروعك.
-dependencies:
-  flutter:
-    sdk: flutter
-  geolocator: ^10.0.1
-  url_launcher: ^6.1.5
-2. استخدم الأمر `flutter pub get` لتحميل الباقات.
-3. أضف الكود أعلاه إلى ملف `main.dart` في مشروعك.
+import 'package:flutter/material.dart';
+import 'package:store_app/screens/product_screen.dart';
+import 'package:store_app/screens/cart_screen.dart';
+import 'package:store_app/screens/profile_screen.dart';
 
-**ملاحظات:**
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
 
-* يجب أن تثبت أن تطلب الإمكانية الوصول إلى الموقع الجغرافي في الهاتف الذكي الخاص بك باستخدام `geolocator`.
-* يُطلب من المستخدم الإذن بالوصول إلى الموقع الجغرافي عند تشغيل التطبيق.
-* يمكن تعديل الرسالة النصية التي تُرسل عند الضغط على زر "أرسل الموقع عبر الرسائل القصيرة" لتضم الإحداثيات و السرعة.
-* للتطبيق الواقعي، يجب أن تكون هناك خطوات أمان لضمان أن التطبيق لا يرسل الموقع الجغرافي بشكل غير مرغوب فيه.
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
-مع هذه الخطوات، يجب أن تكون قادراً على إنشاء تطبيق رادار جی پی اس بتصميم نیون مستقبلي باستخدام Flutter.
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+
+  final _screens = [
+    const ProductScreen(),
+    const CartScreen(),
+    const ProfileScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _screens[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'المنتجات',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: 'سلة المشتريات',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'البروفايل',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+**ملف `product_screen.dart`**
+
+import 'package:flutter/material.dart';
+
+class ProductScreen extends StatelessWidget {
+  const ProductScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('المنتجات'),
+      ),
+      body: ListView.builder(
+        itemCount: 10,
+        itemBuilder: (context, index) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                children: [
+                  Image.network(
+                    'https://via.placeholder.com/100',
+                    width: 100,
+                    height: 100,
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('المنتج 1'),
+                      Text('السعر: 100'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+**ملف `cart_screen.dart`**
+
+import 'package:flutter/material.dart';
+
+class CartScreen extends StatelessWidget {
+  const CartScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('سلة المشتريات'),
+      ),
+      body: const Center(
+        child: Text('سلة المشتريات فارغة'),
+      ),
+    );
+  }
+}
+
+**ملف `profile_screen.dart`**
+
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('البروفايل'),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () async {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('isLoggedIn', false);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LoginScreen(),
+              ),
+            );
+          },
+          child: const Text('تسجيل الخروج'),
+        ),
+      ),
+    );
+  }
+}
+
+يمكنك تشغيل التطبيق باستخدام `flutter run`. 
+
+ملاحظة: هذا التطبيق بسيط جدا ولا يتضمن جميع الميزات التي قد يتوقعها المستخدمون في تطبيق متجر إلكتروني. لإنشاء تطبيق متجر إلكتروني完整 يجب أن تكون على دراية جيدة بتقنيات Flask والتصميم العام للتطبيقات.
