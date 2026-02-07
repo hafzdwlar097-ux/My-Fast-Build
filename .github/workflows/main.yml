@@ -1,26 +1,17 @@
 
-name: Stable Builder
+name: Flutter Super Builder
 on: [push]
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Tools
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential git ffmpeg libsdl2-dev libssl-dev zlib1g-dev           libffi-dev libtinfo5 libncurses5 lld autoconf automake libtool pkg-config
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: subosito/flutter-action@v2
         with:
-          python-version: '3.10'
-      - name: Build
-        run: |
-          pip install --upgrade pip
-          pip install "cython<3.0" kivy buildozer
-          yes | buildozer android debug
-      - name: Upload
-        uses: actions/upload-artifact@v4
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter build apk --debug
+      - uses: actions/upload-artifact@v4
         with:
-          name: App-Stable
-          path: bin/*.apk
+          name: Flutter-App
+          path: build/app/outputs/flutter-apk/app-debug.apk
