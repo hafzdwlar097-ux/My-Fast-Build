@@ -2,35 +2,33 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: TasbeehScreen(),
+      home: const MyHomePage(),
     );
   }
 }
 
-class TasbeehScreen extends StatefulWidget {
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key}) : super(key: key);
+
   @override
-  _TasbeehScreenState createState() => _TasbeehScreenState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _TasbeehScreenState extends State<TasbeehScreen> {
-  int _counter = 0;
+class _MyHomePageState extends State<MyHomePage> {
+  String _text = 'أهلاً بك يا إبراهيم';
 
-  void _incrementCounter() {
+  void _changeText() {
     setState(() {
-      _counter++;
-    });
-  }
-
-  void _resetCounter() {
-    setState(() {
-      _counter = 0;
+      _text = 'تمت التجربة بنجاح';
     });
   }
 
@@ -38,40 +36,23 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          color: Colors.black,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '$_counter',
-              style: TextStyle(fontSize: 64, color: Colors.white),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                minimumSize: Size(200, 50),
+        color: Colors.blue,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _text,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
               ),
-              onPressed: _incrementCounter,
-              child: Text(
-                'سبح',
-                style: TextStyle(fontSize: 24),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.yellow),
+                onPressed: _changeText,
+                child: const Text('اضغط هنا'),
               ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                minimumSize: Size(100, 30),
-              ),
-              onPressed: _resetCounter,
-              child: Text(
-                'تصفير',
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
