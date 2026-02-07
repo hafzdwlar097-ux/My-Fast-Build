@@ -1,247 +1,135 @@
-// Build_ID_vsw0_1770480644
-import 'package:flutter/material.dart';
+// Unique_Build_nsdj_1770482784
+To set up a new Flutter project and add the necessary dependencies for a file transfer app using shelf_static and shelf, follow these steps:
 
-void main() {
-  runApp(const ScienceScannerApp());
+First, create a new Flutter project:
+
+```bash
+flutter create file_transfer_app
+```
+
+Then, navigate to the project directory:
+
+```bash
+cd file_transfer_app
+```
+
+Next, add the necessary dependencies to the `pubspec.yaml` file:
+
+```yml
+dependencies:
+  flutter:
+    sdk: flutter
+  shelf: ^1.3.0
+  shelf_static: ^1.1.0
+```
+
+Run `flutter pub get` to get the dependencies.
+
+Now, create a new file `server.dart` in the `lib` directory and add the following code to set up a basic shelf server:
+
+```dart
+import 'package:shelf/shelf.dart';
+import 'package:shelf/shelf_io.dart' as shelf_io;
+import 'package:shelf_static/shelf_static.dart';
+
+Future<void> main() async {
+  var server = await shelf_io.serve(
+    const Pipeline().addMiddleware(logRequests()).addHandler(_handler),
+    InternetAddress.anyIPv4,
+    8080,
+  );
+  print('Server running on port ${server.port}');
 }
 
-class ScienceScannerApp extends StatelessWidget {
-  const ScienceScannerApp({Key? key}) : super(key: key);
+Handler _handler(Handler _) {
+  return const StaticHandler(
+    fileSystem: FileSystem.system(),
+    urlPrefix: '/files',
+    defaultDocument: 'index.html',
+  );
+}
+```
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Science Scanner',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue[900]!,
-          brightness: Brightness.light,
-        ),
-      ),
-      home: const ScienceScannerHomePage(),
-    );
-  }
+This sets up a basic shelf server that serves static files from the `files` directory.
+
+Next, create a new directory `files` in the root of the project and add some files to it.
+
+To handle file uploads, you will need to add a new endpoint to the `_handler` function. For example:
+
+```dart
+Handler _handler(Handler _) {
+  return Cascade()
+    .add(_staticHandler)
+    .add(_uploadHandler);
 }
 
-class ScienceScannerHomePage extends StatefulWidget {
-  const ScienceScannerHomePage({Key? key}) : super(key: key);
-
-  @override
-  State<ScienceScannerHomePage> createState() => _ScienceScannerHomePageState();
+Handler _staticHandler(Handler _) {
+  return const StaticHandler(
+    fileSystem: FileSystem.system(),
+    urlPrefix: '/files',
+    defaultDocument: 'index.html',
+  );
 }
 
-class _ScienceScannerHomePageState extends State<ScienceScannerHomePage> {
-  int _currentIndex = 0;
+Handler _uploadHandler(Handler _) {
+  return (request) async {
+    if (request.method != 'POST') {
+      return Response.notFound(body: 'Not Found');
+    }
 
-  final _pages = [
-    const PhysicsCalculatorPage(),
-    const ChemicalElementsDatabasePage(),
-    const GeometryUnitsConverterPage(),
-  ];
+    if (request.url.pathSegments.first != 'upload') {
+      return Response.notFound(body: 'Not Found');
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calculate),
-            label: 'حاسبة قوانين الفيزياء',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: 'قاعدة بيانات العناصر الكيميائية',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.compare),
-            label: 'محول وحدات هندسية',
-          ),
-        ],
-      ),
-    );
-  }
+    final multipartRequest = await request.read().timeout(const Duration(seconds: 10));
+    final multipartRequestBody = MultipartRequest(multipartRequest);
+
+    final file = await multipartRequestBody.files.first.value;
+    final fileName = file.filename;
+    final fileBytes = await file.stream.toBytes();
+
+    await File('files/$fileName').writeAsBytes(fileBytes);
+
+    return Response.ok(body: 'File uploaded successfully');
+  };
 }
+```
 
-class PhysicsCalculatorPage extends StatefulWidget {
-  const PhysicsCalculatorPage({Key? key}) : super(key: key);
+This code sets up a new endpoint at `/upload` that accepts POST requests with a multipart body. It saves the uploaded file to the `files` directory.
 
-  @override
-  State<PhysicsCalculatorPage> createState() => _PhysicsCalculatorPageState();
+Now you can use a tool like curl to upload a file to the server:
+
+```bash
+curl -X POST -F 'file=@/path/to/file' http://localhost:8080/upload
+```
+
+This is a basic example of a file transfer app using shelf_static and shelf. You can add more features like authentication and error handling as needed.
+
+In the Flutter app, you can use the `http` package to send requests to the server. Add the `http` package to your `pubspec.yaml` file:
+
+```yml
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^0.13.5
+```
+
+Then, use the `http` package to send requests to the server. For example:
+
+```dart
+import 'package:http/http.dart' as http;
+
+Future<void> uploadFile() async {
+  final url = Uri.parse('http://localhost:8080/upload');
+  final request = http.MultipartRequest('POST', url);
+  request.files.add(http.MultipartFile.fromBytes(
+    'file',
+    await File('path/to/file').readAsBytes(),
+    filename: 'file.txt',
+  ));
+  final response = await request.send();
+  print('Response status: ${response.statusCode}');
 }
+```
 
-class _PhysicsCalculatorPageState extends State<PhysicsCalculatorPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _velocityController = TextEditingController();
-  final _timeController = TextEditingController();
-  final _accelerationController = TextEditingController();
-
-  String _result = '';
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            TextFormField(
-              controller: _velocityController,
-              decoration: const InputDecoration(
-                labelText: 'السرعة',
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'الرجاء إدخال قيمة';
-                }
-                return null;
-              },
-            ),
-            TextFormField(
-              controller: _timeController,
-              decoration: const InputDecoration(
-                labelText: 'الوقت',
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'الرجاء إدخال قيمة';
-                }
-                return null;
-              },
-            ),
-            TextFormField(
-              controller: _accelerationController,
-              decoration: const InputDecoration(
-                labelText: 'التسارع',
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'الرجاء إدخال قيمة';
-                }
-                return null;
-              },
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  final velocity = double.parse(_velocityController.text);
-                  final time = double.parse(_timeController.text);
-                  final acceleration = double.parse(_accelerationController.text);
-
-                  final result = velocity * time + 0.5 * acceleration * time * time;
-
-                  setState(() {
-                    _result = result.toString();
-                  });
-                }
-              },
-              child: const Text('حس_ab'),
-            ),
-            Text(_result),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ChemicalElementsDatabasePage extends StatefulWidget {
-  const ChemicalElementsDatabasePage({Key? key}) : super(key: key);
-
-  @override
-  State<ChemicalElementsDatabasePage> createState() => _ChemicalElementsDatabasePageState();
-}
-
-class _ChemicalElementsDatabasePageState extends State<ChemicalElementsDatabasePage> {
-  final _elements = [
-    {'name': 'الهيدروجين', 'symbol': 'H', 'atomicNumber': 1},
-    {'name': 'الهليوم', 'symbol': 'He', 'atomicNumber': 2},
-    // أضف عناصر كيميائية هنا
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: _elements.length,
-      itemBuilder: (context, index) {
-        final element = _elements[index];
-
-        return ListTile(
-          title: Text(element['name']!),
-          subtitle: Text('${element['symbol']} - ${element['atomicNumber']}'),
-        );
-      },
-    );
-  }
-}
-
-class GeometryUnitsConverterPage extends StatefulWidget {
-  const GeometryUnitsConverterPage({Key? key}) : super(key: key);
-
-  @override
-  State<GeometryUnitsConverterPage> createState() => _GeometryUnitsConverterPageState();
-}
-
-class _GeometryUnitsConverterPageState extends State<GeometryUnitsConverterPage> {
-  final _fromController = TextEditingController();
-  final _toController = TextEditingController();
-
-  String _result = '';
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        children: [
-          TextField(
-            controller: _fromController,
-            decoration: const InputDecoration(
-              labelText: 'من',
-            ),
-          ),
-          TextField(
-            controller: _toController,
-            decoration: const InputDecoration(
-              labelText: 'إلى',
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_fromController.text.isNotEmpty && _toController.text.isNotEmpty) {
-                final from = double.parse(_fromController.text);
-                final to = _toController.text;
-
-                double result;
-
-                if (to == 'مليمتر') {
-                  result = from * 1000;
-                } else if (to == 'سنتيمتر') {
-                  result = from * 100;
-                } else if (to == 'متر') {
-                  result = from;
-                } else {
-                  result = 0;
-                }
-
-                setState(() {
-                  _result = result.toString();
-                });
-              }
-            },
-            child: const Text('转换'),
-          ),
-          Text(_result),
-        ],
-      ),
-    );
-  }
-}
+This code sends a POST request to the `/upload` endpoint with a multipart body containing the file.
