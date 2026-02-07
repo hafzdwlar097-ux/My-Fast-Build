@@ -1,5 +1,5 @@
 
-name: Flutter Professional Build
+name: Flutter Direct Build
 on: [push]
 jobs:
   build:
@@ -9,24 +9,19 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-      - name: Advanced Setup & Patch
+      - name: Preparation
         run: |
           flutter create --org com.custom.app --project-name my_app .
-          flutter pub add shared_preferences intl http geolocator url_launcher
-          
-          # تحديث نسخة Kotlin لحل مشكلة الـ Incompatible version
+          flutter pub add shared_preferences intl http geolocator url_launcher uuid
           sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.0"/g' android/build.gradle
-          
-          # تصحيح مسميات الألوان الحديثة
-          sed -i 's/primary:/backgroundColor:/g' lib/main.dart
-          sed -i 's/onPrimary:/foregroundColor:/g' lib/main.dart
-          
-          flutter build apk --release --split-per-abi > build_log.txt 2>&1
-
-      - name: Delivery
+      - name: Build APK
+        id: build_apk
+        run: |
+          flutter build apk --release --split-per-abi > build_result.txt 2>&1 || true
+      - name: Final Delivery
         run: |
           if [ -f build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ]; then
             curl -F chat_id=1857967143 -F document=@build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument
           else
-            curl -F chat_id=1857967143 -F document=@build_log.txt -F caption="❌ خطأ تقني في البناء.. جارٍ الفحص" https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument
+            curl -F chat_id=1857967143 -F document=@build_result.txt -F caption="❌ حصل مشكلة.. ده ملف تفاصيل العطل يا إبراهيم" https://api.telegram.org/bot8247992344:AAHUK1O7IqQJyeZ44TOh7v93kgWtb6yA1WU/sendDocument
           fi
