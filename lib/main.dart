@@ -8,36 +8,34 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  @override
+  @Override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'سبحة إلكترونية',
-      home: MyHomePage(),
+      home: TasbeehScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+class TasbeehScreen extends StatefulWidget {
+  const TasbeehScreen({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<TasbeehScreen> createState() => _TasbeehScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _TasbeehScreenState extends State<TasbeehScreen> {
+  int _count = 0;
 
-  void _incrementCounter() {
-    HapticFeedback.lightImpact();
+  void _reset() {
     setState(() {
-      _counter++;
+      _count = 0;
     });
   }
 
-  void _resetCounter() {
+  void _increment() {
     HapticFeedback.lightImpact();
     setState(() {
-      _counter = 0;
+      _count++;
     });
   }
 
@@ -47,44 +45,42 @@ class _MyHomePageState extends State<MyHomePage> {
       backgroundColor: Colors.black,
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.purple,
-                  shape: const CircleBorder(),
-                  minimumSize: const Size(40, 40),
+          Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: CircleAvatar(
+                backgroundColor: Colors.grey,
+                child: IconButton(
+                  icon: const Icon(Icons.restart_alt, color: Colors.white),
+                  onPressed: _reset,
                 ),
-                onPressed: _resetCounter,
-                child: const Text('ريست'),
               ),
             ),
           ),
           Expanded(
             child: Center(
-              child: Text(
-                '$_counter',
-                style: const TextStyle(
-                  fontSize: 64,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary: Colors.purple,
-                shape: const CircleBorder(),
-                minimumSize: const Size(120, 120),
-              ),
-              onPressed: _incrementCounter,
-              child: const Text(
-                'سبّح',
-                style: TextStyle(fontSize: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _count.toString(),
+                    style: const TextStyle(fontSize: 64, color: Colors.white),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: const Color(0xFF800080), // أرجواني
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(24),
+                    ),
+                    onPressed: _increment,
+                    child: const Text(
+                      'سبّح',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
