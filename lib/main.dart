@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 
 void main() {
@@ -11,66 +12,75 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: MyHomePage(),
+      home: TasbeehScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+class TasbeehScreen extends StatefulWidget {
+  const TasbeehScreen({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<TasbeehScreen> createState() => _TasbeehScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _TasbeehScreenState extends State<TasbeehScreen> {
+  int _count = 0;
 
   void _incrementCounter() {
     setState(() {
-      _counter++;
+      _count++;
+      Vibration.vibrate(pattern: [100, 100, 100, 100]);
     });
-    Vibration.vibrate();
   }
 
   void _resetCounter() {
     setState(() {
-      _counter = 0;
+      _count = 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CircleAvatar(
-                  backgroundColor: Colors.grey,
-                  radius: 15,
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.refresh, color: Colors.white),
-                    onPressed: _resetCounter,
-                  ),
+      backgroundColor: const Color(0xFF000000),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: const Color(0xFF000000),
+                  padding: const EdgeInsets.all(8),
+                  shape: const CircleBorder(),
+                  minimumSize: const Size(40, 40),
+                ),
+                onPressed: _resetCounter,
+                child: const Icon(
+                  Icons.restart_alt,
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
             ),
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 48, color: Colors.white),
+          ),
+          Expanded(
+            child: Center(
+              child: Text(
+                '$_count',
+                style: const TextStyle(fontSize: 64, color: Colors.white),
+              ),
             ),
-            ElevatedButton(
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                primary: const Color(0xFF800080), // أرجواني
+                primary: const Color(0xFF7A288A),
                 shape: const CircleBorder(),
-                minimumSize: const Size(100, 100),
+                minimumSize: const Size(120, 120),
               ),
               onPressed: _incrementCounter,
               child: const Text(
@@ -78,8 +88,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: TextStyle(fontSize: 24),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
