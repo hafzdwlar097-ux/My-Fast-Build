@@ -16,7 +16,13 @@ class MyApp extends StatelessWidget {
       title: 'Habit Tracker',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: const ColorScheme.dark(),
+        backgroundColor: const Color(0xFF000000),
+        cardColor: const Color(0xFF333333),
+        cardTheme: const CardTheme(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+        ),
       ),
       home: const HabitTracker(),
     );
@@ -31,8 +37,54 @@ class HabitTracker extends StatefulWidget {
 }
 
 class _HabitTrackerState extends State<HabitTracker> {
-  List<Habit> _habits = [];
-  final _controller = TextEditingController();
+  final List<Habit> _habits = [];
+  final _habitController = TextEditingController();
+
+  void _addHabit() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (_habitController.text.isNotEmpty) {
+      final habit = Habit(
+        title: _habitController.text,
+        isCompleted: false,
+        frequency: 0,
+      );
+      setState(() {
+        _habits.add(habit);
+        _habitController.clear();
+      });
+      await prefs.setString('habits', jsonEncode(_habits.map((habit) => habit.toJson()).toList()));
+    }
+  }
+
+  void _toggleHabit(int index) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _habits[index].isCompleted = !_habits[index].isCompleted;
+      if (_habits[index].isCompleted) {
+        _habits[index].frequency++;
+      }
+    });
+    await prefs.setString('habits', jsonEncode(_habits.map((habit) => habit.toJson()).toList()));
+  }
+
+  void _removeHabit(int index) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _habits.removeAt(index);
+    });
+    await prefs.setString('habits', jsonEncode(_habits.map((habit) => habit.toJson()).toList()));
+  }
+
+  void _loadHabits() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? habitsJson = prefs.getString('habits');
+    if (habitsJson != null) {
+      final List<Habit> habits = jsonDecode(habitsJson).map((habitJson) => Habit.fromJson(habitJson)).toList();
+      setState(() {
+        _habits.addAll(habits);
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -50,112 +102,82 @@ class _HabitTrackerState extends State<HabitTracker> {
         color: const Color(0xFF000000),
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _habitController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Add Habit',
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _addHabit,
+              child: const Text('Add'),
+            ),
+            const SizedBox(height: 16),
             Expanded(
               child: _habits.isEmpty
                   ? const Center(
-                      child: Text('No habits'),
+                      child: Text('No habits added'),
                     )
                   : ListView.builder(
                       itemCount: _habits.length,
                       itemBuilder: (context, index) {
                         return Card(
-                          color: const Color(0xFF333333),
                           child: ListTile(
-                            title: Text(_habits[index].name),
-                            trailing: Text(_habits[index].streak.toString()),
-                            leading: Checkbox(
-                              value: _habits[index].completed,
-                              onChanged: (value) {
-                                setState(() {
-                                  _habits[index].completed = value ?? false;
-                                  _saveHabits();
-                                  if (value ?? false) {
-                                    _habits[index].streak++;
-                                  } else {
-                                    _habits[index].streak = 0;
-                                  }
-                                });
-                              },
+                            title: Text(_habits[index].title),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Checkbox(
+                                  value: _habits[index].isCompleted,
+                                  onChanged: (value) => _toggleHabit(index),
+                                ),
+                                Text('Completed ${_habits[index].frequency} times'),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () => _removeHabit(index),
+                                ),
+                              ],
                             ),
                           ),
                         );
                       },
                     ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      decoration: const InputDecoration(
-                        filled: true,
-                        labelText: 'Add new habit',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        if (_controller.text.isNotEmpty) {
-                          _habits.add(Habit(_controller.text));
-                          _saveHabits();
-                          _controller.clear();
-                        }
-                      });
-                    },
-                    child: const Text('Add'),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
     );
   }
-
-  void _loadHabits() async {
-    final prefs = await SharedPreferences.getInstance();
-    final habitsJson = prefs.getString('habits');
-    if (habitsJson != null) {
-      final habits = jsonDecode(habitsJson).map((json) => Habit.fromJson(json)).toList();
-      setState(() {
-        _habits = habits;
-      });
-    }
-  }
-
-  void _saveHabits() async {
-    final prefs = await SharedPreferences.getInstance();
-    final habitsJson = jsonEncode(_habits.map((habit) => habit.toJson()).toList());
-    prefs.setString('habits', habitsJson);
-  }
 }
 
 class Habit {
-  String name;
-  bool completed;
-  int streak;
+  String title;
+  bool isCompleted;
+  int frequency;
 
-  Habit(this.name, {this.completed = false, this.streak = 0});
+  Habit({
+    required this.title,
+    this.isCompleted = false,
+    this.frequency = 0,
+  });
 
   factory Habit.fromJson(Map<String, dynamic> json) {
     return Habit(
-      json['name'],
-      completed: json['completed'],
-      streak: json['streak'],
+      title: json['title'],
+      isCompleted: json['isCompleted'],
+      frequency: json['frequency'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'name': name,
-      'completed': completed,
-      'streak': streak,
+      'title': title,
+      'isCompleted': isCompleted,
+      'frequency': frequency,
     };
   }
 }
