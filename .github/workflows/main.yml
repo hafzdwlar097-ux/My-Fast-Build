@@ -1,5 +1,5 @@
 
-name: Flutter Super Builder
+name: Flutter Auto Builder
 on: [push]
 jobs:
   build:
@@ -9,13 +9,16 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-          channel: 'stable'
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Create Fresh Project
+        run: |
+          flutter create --org com.ibrahim -t app my_app
+          cp main.dart my_app/lib/main.dart
       - name: Build APK
-        run: flutter build apk --debug
-      - name: Upload APK
+        run: |
+          cd my_app
+          flutter build apk --debug
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Flutter-App
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: Final-App
+          path: my_app/build/app/outputs/flutter-apk/app-debug.apk
