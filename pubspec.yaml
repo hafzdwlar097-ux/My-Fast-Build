@@ -1,8 +1,8 @@
 
-name: app_aysenq
+name: akgxuy
 description: Unique Build aysenq
 publish_to: 'none'
-version: 2.7.8
+version: 6..2
 environment:
   sdk: '>=3.0.0 <4.0.0'
 dependencies:
