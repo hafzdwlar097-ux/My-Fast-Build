@@ -9,10 +9,14 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
-      - name: Build
+      - name: Project Setup
         run: |
           flutter create --org com.app --project-name fast_app .
-          flutter build apk --release --split-per-abi
+          # تصحيح تلقائي للكود لو الـ AI استخدم كلمات قديمة
+          sed -i 's/primary:/backgroundColor:/g' lib/main.dart
+          sed -i 's/onPrimary:/foregroundColor:/g' lib/main.dart
+      - name: Build
+        run: flutter build apk --release --split-per-abi
       - name: Send
         run: |
           FILE="build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk"
